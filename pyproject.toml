@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "meerkat_dl"
+name = "mdl"
 version = "0.1.0"
 description = "A Deep Learning Framework Just for Fun!"
 authors = ["Raghav Saboo"]
@@ -8,8 +8,13 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+numpy = "^1.26.3"
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-cov = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
