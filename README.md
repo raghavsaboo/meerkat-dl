@@ -1,6 +1,8 @@
-# meerkat_dl
+# Meerkat Deep Learning Framework
 
-A Deep Learning Framework Just for Fun!
+![MeerkatDL](./misc/meerkatdl.png)
+
+A Deep Learning Framework Just for Fun! 🥳
 
 ## Installation
 
@@ -10,7 +12,12 @@ $ pip install meerkat_dl
 
 ## Usage
 
-- TODO
+- Automatic Differentiation
+- Computation Graph
+- Basic Layers (Dense, RNN, CNN)
+- Basic Activation Functions (ReLU, TanH, Sigmoid, Softmax)
+- Basic Optimizers (SGD, Adam)
+- Basic Loss Functions
 
 ## Contributing
 
@@ -19,6 +26,12 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 ## License
 
 `meerkat_dl` was created by Raghav Saboo. It is licensed under the terms of the MIT license.
+
+## References
+
+[Paszke, Adam, et al. "Automatic differentiation in PyTorch." (2017)](https://openreview.net/pdf?id=BJJsrmfCZ)
+
+[Paszke, Adam, et al. "Pytorch: An imperative style, high-performance deep learning library." Advances in neural information processing systems 32 (2019).](https://proceedings.neurips.cc/paper_files/paper/2019/hash/bdbca288fee7f92f2bfa9f7012727740-Abstract.html)
 
 ## Credits
 

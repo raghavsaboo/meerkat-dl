@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mdl"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Deep Learning Framework Just for Fun!"
 authors = ["Raghav Saboo"]
 license = "MIT"
@@ -15,6 +15,10 @@ numpy = "^1.26.3"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
 pytest-cov = "^4.1.0"
+myst-nb = {version = "^1.0.0", python = "^3.9"}
+sphinx-autoapi = "^3.0.0"
+sphinx-rtd-theme = "^2.0.0"
+pre-commit = "^3.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
