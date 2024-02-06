@@ -5,11 +5,12 @@ from mdl.base.operations import Add
 
 
 def test_tensor_addition():
-    a = Tensor([1., 2., 3.], requires_grad=False)
-    b = Tensor([1., 2., 3.], requires_grad=False)
+    a = Tensor([1.0, 2.0, 3.0], requires_grad=False)
+    b = Tensor([1.0, 2.0, 3.0], requires_grad=False)
 
     addition_op = Add()
 
     assert addition_op.forward(a, b) == Tensor(
-        [2., 4., 6.], requires_grad=False,
+        [2.0, 4.0, 6.0],
+        requires_grad=False,
     )

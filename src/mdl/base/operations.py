@@ -1,41 +1,72 @@
-import numpy as np
-from abc import ABC, abstractmethod
+from __future__ import annotations
+
+from abc import ABC
+from abc import abstractmethod
+
+from mdl.autodiff.dcgraph import DCGraph
 from mdl.tensor import Tensor
-from numpy import ndarray
-from typing import List
+
 
 class Operation(ABC):
+
+    global_dc_graph = DCGraph()
 
     @property
     def requires_grad(self):
         pass
-    
-    @requires_grad.setter
-    @abstractmethod
-    def requires_grad(self, input_tensors: List[Tensor]) -> None:
-        self.requires_grad = any([tensor.requires_grad for tensor  in input_tensors]) 
 
-    @classmethod
+    @requires_grad.setter
+    def requires_grad(self, input_tensors: list[Tensor]) -> None:
+        self.requires_grad = any(
+            [tensor.requires_grad for tensor in input_tensors],
+        )
+
+    def validate_input_tensors(
+        self,
+        input_tensors: list[Tensor],
+    ) -> list[Tensor]:
+        if not isinstance(input_tensors, list):
+            ValueError("Input Tensors should be passed as a list of Tensors")
+
+        for input_tensor in input_tensors:
+            if not isinstance(input_tensor, Tensor):
+                ValueError(
+                    f"Expected all inputs to be of type Tensor. \
+                    Got {type(input_tensor)}"
+                )
+
+    def forward(self, input_tensors: list[Tensor]) -> Tensor:
+        input_tensors = self.validate_input_tensors(input_tensors)
+        self.requires_grad(input_tensors)
+        self._forward()
+
     @abstractmethod
-    def forward(self, input_tensors):
-        raise NotImplementedError(f"Forward method not implemented for operator {self}")
-    
-    @abstractmethod
-    def _input_gradient(self):
-        raise NotImplementedError(f"Input gradient not defined for operator {self}")
-    
-    @classmethod
+    def _forward(self, input_tensors: list[Tensor]) -> Tensor:
+        raise NotImplementedError(
+            f"Forward method not implemented for operator {self}",
+        )
+
     @abstractmethod
     def backward(self):
-        raise NotImplementedError(f"Backward pass not implemented for operator {self}")
-    
+        raise NotImplementedError(
+            f"Backward pass not implemented for operator {self}",
+        )
+
 
 class Add(Operation):
-    
-    def forward(self, a, b):
-        self.requires_grad([a.requires_grad, b.requires_grad])
+
+    def _forward(self, input_tensors: list[Tensor]) -> Tensor:
+        if len(input_tensors) != 2:
+            ValueError(f"Expect 2 input tensors but got {len(input_tensors)}")
+
+        a = input_tensors[0]
+        b = input_tensors[1]
+
         result = Tensor(a.data + b.data, self.requires_grad)
-        
+
+        self.global_dc_graph.add_tensor_node(a)
+
         return result
-    
-    
+
+    def backward(self, input_tenors: list[Tensor]) -> Tensor:
+        pass
