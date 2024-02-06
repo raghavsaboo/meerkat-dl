@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from mdl.autodiff.tensor import Tensor
 from mdl.base.operations import Add
+from mdl.tensor import Tensor
 
 
 def test_tensor_addition():

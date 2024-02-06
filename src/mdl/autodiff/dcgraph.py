@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import List
+from typing import Set
 from typing import TYPE_CHECKING
+from typing import Union
 
 if TYPE_CHECKING:
     from mdl.tensor import Tensor
@@ -15,7 +18,7 @@ class DCGraph:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.tensor_nodes: set[Tensor, None] = set()
+            cls._instance.tensor_nodes: Set[Tensor, None] = set()
         return cls._instance
 
     def __str__(self):
@@ -25,26 +28,22 @@ class DCGraph:
         return f"{self.__class__.__name__}({self.__dict__})"
 
     @property
-    def tensor_nodes(self) -> list[Tensor]:
+    def tensor_nodes(self) -> Set[Tensor]:
         return self.tensor_nodes
 
-    @tensor_nodes.setter
-    def tensor_nodes(self, nodes: set[Tensor, None]):
-        self.tensor_nodes = nodes
+    def __len__(self):
+        return len(self.tensor_nodes)
 
     def add_tensor_node(self, tensor: Tensor) -> None:
-        self.tensor_nodes.append(tensor)
-
-    def get_tensor_node(self, tensor: Tensor) -> Tensor:
-        return self.tensor_nodes.get(tensor)
+        self.tensor_nodes.add(tensor)
 
     def remove_tensor_node(self, tensor: Tensor) -> Tensor:
-        self.tensor_nodes.pop(tensor)
+        self.tensor_nodes.remove(tensor)
 
     def reset_graph(self):
         self.tensor_nodes = set()
 
-    def topological_sort(self) -> list[Tensor, None]:
+    def topological_sort(self) -> List[Union[Tensor, None]]:
         visited = set()
         stack = []
 

@@ -28,17 +28,23 @@ class Operation(ABC):
         if not isinstance(input_tensors, list):
             ValueError("Input Tensors should be passed as a list of Tensors")
 
+        validated_input_tensors = []
+
         for input_tensor in input_tensors:
             if not isinstance(input_tensor, Tensor):
                 ValueError(
                     f"Expected all inputs to be of type Tensor. \
                     Got {type(input_tensor)}"
                 )
+            else:
+                validated_input_tensors.append(input_tensor)
+
+        return validated_input_tensors
 
     def forward(self, input_tensors: list[Tensor]) -> Tensor:
         input_tensors = self.validate_input_tensors(input_tensors)
         self.requires_grad(input_tensors)
-        self._forward()
+        self._forward(input_tensors)
 
     @abstractmethod
     def _forward(self, input_tensors: list[Tensor]) -> Tensor:
@@ -68,5 +74,5 @@ class Add(Operation):
 
         return result
 
-    def backward(self, input_tenors: list[Tensor]) -> Tensor:
+    def backward(self) -> Tensor:
         pass

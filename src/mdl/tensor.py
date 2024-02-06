@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Callable
+from typing import List
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -25,10 +27,10 @@ class Tensor:
         if self._requires_grad:
             self.set_gradients_to_zero()
 
-        self._child_tensors: list[Tensor] = []
-        self._parent_tensors: list[Tensor] = []
-        self._parent_broadcast_shape: tuple(int) = None
-        self._grad_fn: Callable = None
+        self._child_tensors: List[Tensor] = []
+        self._parent_tensors: List[Tensor] = []
+        self._parent_broadcast_shape: Tuple[int] | None = None
+        self._grad_fn: Callable | None = None
 
     def __str__(self):
         return f"Tensor({self.data})"
@@ -45,17 +47,16 @@ class Tensor:
         self._data = self._convert_to_ndarray(data)
         # changing the data means that the current gradient
         # is invalid
-        self._grad = None
+        self.set_gradients_to_zero()
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, ...]:
         return self._data.shape
 
     @property
-    def grad(self):
+    def grad(self) -> np.ndarray:
         return self._grad
 
-    @grad.setter
     def accumulate_grad(self, gradient: TensorDataTypes):
         self._grad += gradient
 
@@ -73,8 +74,7 @@ class Tensor:
     def child_tensors(self):
         return self._child_tensors
 
-    @child_tensors.setter
-    def add_child_tensor(self, tensor: Tensor):
+    def add_child_tensor(self, tensor: Tensor) -> None:
         assert isinstance(tensor, Tensor), "Expected Tensor type"
         self._child_tensors.append(tensor)
 
@@ -82,8 +82,7 @@ class Tensor:
     def parent_tensors(self):
         return self._parent_tensors
 
-    @parent_tensors.setter
-    def add_parent_tensor(self, tensor: Tensor):
+    def add_parent_tensor(self, tensor: Tensor) -> None:
         assert isinstance(tensor, Tensor), "Expected Tensor type"
         self._parent_tensors.append(tensor)
 
@@ -108,15 +107,12 @@ class Tensor:
 
     @staticmethod
     def _convert_to_ndarray(data: TensorDataTypes) -> np.ndarray:
-        assert isinstance(
+        assert not isinstance(
             data,
-            (float, int, np.ndarray),
+            (float, int, list, np.ndarray),
         ), "Incompatible type for `data`. Expect float, int or numpy array."
 
-        if isinstance(np.ndarray):
-            return data
-        else:
-            return np.array(data)
+        return np.array(data)
 
     def to_list(self):
         return self._data.tolist()
