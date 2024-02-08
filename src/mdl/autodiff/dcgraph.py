@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from typing import Deque
 from typing import List
 from typing import Set
 from typing import TYPE_CHECKING
-from typing import Deque
+from typing import Union
 
 if TYPE_CHECKING:
     from mdl.tensor import Tensor
 
 from collections import deque
+
 
 class DCGraph:
 
@@ -19,7 +21,7 @@ class DCGraph:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.tensor_nodes: Set[Tensor, None] = set()
+            cls._instance.tensor_nodes: Set[Union[Tensor, None]] = set()
         return cls._instance
 
     def __str__(self):
@@ -30,6 +32,14 @@ class DCGraph:
 
     def __len__(self):
         return len(self.tensor_nodes)
+
+    @property
+    def tensor_nodes(self):
+        return self._tensor_nodes
+
+    @tensor_nodes.setter
+    def tensor_nodes(self, value: Set[Union[Tensor, None]]):
+        self._tensor_nodes = value
 
     def add_tensor_node(self, tensor: Tensor) -> None:
         if tensor not in self.tensor_nodes:
@@ -49,18 +59,16 @@ class DCGraph:
     def reset_graph(self):
         self.tensor_nodes.clear()
 
-    def backpropogate(self, tensor: Tensor):
+    def backpropogate(self, tensor: Tensor) -> None:
         tensor_queue = self.topological_sort(tensor)
-        
+
         while tensor_queue:
             current = tensor_queue.pop()
             current._backward()
-        
-    def topological_sort(
-        self, tensor: Tensor
-    ) -> Deque[Tensor]:
+
+    def topological_sort(self, tensor: Tensor) -> Deque[Tensor]:
         visited = set(tensor.children)
-        tensor_queue = deque()
+        tensor_queue: Deque[Tensor] = deque()
 
         def topo_sort(tensor):
             if tensor not in visited:

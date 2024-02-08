@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from mdl.base.operations import Add
+from mdl.operations import Add
 from mdl.tensor import Tensor
 
 

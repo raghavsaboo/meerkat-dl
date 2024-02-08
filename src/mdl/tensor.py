@@ -7,7 +7,6 @@ from typing import Union
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
-from mdl.operations import add
 from mdl.utilities import unbroadcast
 
 TensorDataTypes = Union[float, int, list, np.ndarray]
@@ -140,14 +139,110 @@ class Tensor:
     def to_array(self):
         return self._data
 
-    def __add__(self, b: TensorDataTypes) -> Tensor:
+    def __add__(self, b: Tensor) -> Tensor:
+        from mdl.operations import add
+
         return add([self, b])
 
-    def __radd__(self, b: TensorDataTypes) -> Tensor:
+    def __radd__(self, b: Tensor) -> Tensor:
+        from mdl.operations import add
+
         return add([b, self])
 
-    def __iadd__(self, b: TensorDataTypes) -> Tensor:
+    def __iadd__(self, b: Tensor) -> Tensor:
+        from mdl.operations import add
+
         return add([self, b])
+
+    def __sub__(self, other: Tensor) -> Tensor:
+        from mdl.operations import sub
+
+        return sub([self, other])
+
+    def __rsub__(self, other: Tensor) -> Tensor:
+        from mdl.operations import sub
+
+        return sub([other, self])
+
+    def __isub__(self, other: Tensor) -> Tensor:
+        from mdl.operations import sub
+
+        return sub([self, other])
+
+    def __mul__(self, other: Tensor) -> Tensor:
+        from mdl.operations import mul
+
+        return mul([self, other])
+
+    def __rmul__(self, other: Tensor) -> Tensor:
+        from mdl.operations import mul
+
+        return mul([other, self])
+
+    def __imul__(self, other: Tensor) -> Tensor:
+        from mdl.operations import mul
+
+        return mul([self, other])
+
+    def __truediv__(self, other: Tensor) -> Tensor:
+        from mdl.operations import div
+
+        return div([self, other])
+
+    def __rtruediv__(self, other: Tensor) -> Tensor:
+        from mdl.operations import div
+
+        return div([other, self])
+
+    def __itruediv__(self, other: Tensor) -> Tensor:
+        from mdl.operations import div
+
+        return div([self, other])
+
+    def __matmul__(self, other: Tensor) -> Tensor:
+        from mdl.operations import dot
+
+        return dot([self, other])
+
+    def __rmatmul__(self, other: Tensor) -> Tensor:
+        from mdl.operations import dot
+
+        return dot([other, self])
+
+    def __imatmul__(self, other: Tensor) -> Tensor:
+        from mdl.operations import dot
+
+        return dot([self, other])
+
+    def __exp__(self) -> Tensor:
+        from mdl.operations import exp
+
+        return exp([self])
+
+    def __log__(self) -> Tensor:
+        from mdl.operations import log
+
+        return log([self])
+
+    def sum(self) -> Tensor:
+        from mdl.operations import sum_tensors
+
+        return sum_tensors([self])
+
+    def flatten(self) -> Tensor:
+        from mdl.operations import flatten
+
+        return flatten([self])
+
+    def transpose(self) -> Tensor:
+        from mdl.operations import transpose
+
+        return transpose([self])
+
+    def reshape(self, new_shape: Tuple[int]) -> Tensor:
+        from mdl.operations import reshape
+
+        return reshape([self], new_shape)
 
     def backward(self, output_grad: TensorDataTypes = 1.0):
         if not self.requires_grad:
@@ -162,14 +257,16 @@ class Tensor:
 
         self.accumulate_grad(output_grad)
         self.global_dc_graph.backpropogate(self)
-        
+
     def backprop_calculation(self):
         for child in self.child_tensors:
             if self.requires_grad:
                 child.backward_fn(*[tensor for tensor in child.parent_tensors])
                 output_grad = child.grad
                 local_grad = self.grad_fn(output_grad)
-                local_grad = unbroadcast(local_grad, self.shape, child.parent_broadcast_shape)
+                local_grad = unbroadcast(
+                    local_grad, self.shape, child.parent_broadcast_shape
+                )
                 local_grad = local_grad.reshape(self.shape)
                 self.accumulate_grad(local_grad)
 
