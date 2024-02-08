@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 import unittest
+from collections import deque
+
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
 from mdl.tensor import Tensor
-from collections import deque
+
 
 class TestDCGraph(unittest.TestCase):
     def test_add_tensor_node(self):
@@ -47,8 +51,11 @@ class TestDCGraph(unittest.TestCase):
         dc_graph.add_edge(tensor_a, [tensor_b])
         dc_graph.add_edge(tensor_a, [tensor_c])
         tensor_queue = dc_graph.topological_sort(tensor_a)
-        self.assertEqual(tensor_queue, deque(reversed([tensor_c, tensor_b, tensor_a])))
+        self.assertEqual(
+            tensor_queue, deque(reversed([tensor_c, tensor_b, tensor_a]))
+        )
         dc_graph.reset_graph()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

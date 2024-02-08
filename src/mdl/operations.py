@@ -4,7 +4,7 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Any
 from typing import List
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
@@ -21,7 +21,7 @@ class Operation(ABC):
         *args: Any,
         **kwargs: Any,
     ):
-        return self.forward(input_tensors)
+        return self.forward(input_tensors, *args, **kwargs)
 
     def set_requires_grad(self, input_tensors: List[Tensor]) -> None:
         self.requires_grad = any(
@@ -262,9 +262,18 @@ class Log(Operation):
 
 
 class Sum(Operation):
-    def _forward(self, input_tensors: List[Tensor]) -> Tensor:
+    def _forward(self, input_tensors: List[Tensor], axis: Union[int, None]) -> Tensor:
+        if len(input_tensors) != 1:
+            raise ValueError(
+                f"Expect 1 input tensor but got {len(input_tensors)}"
+            )
+
+        a = input_tensors[0]
+        
+        self.axis = axis
+        
         result = Tensor(
-            np.sum([tensor.data for tensor in input_tensors]),
+            np.sum(a.data, axis=self.axis),
             self.requires_grad,
         )
 
@@ -278,10 +287,11 @@ class Sum(Operation):
         return result
 
     def backward(self, input_tensors: List[Tensor]) -> None:
-        for tensor in input_tensors:
-            tensor.grad_fn = lambda output_grad: output_grad * np.ones_like(
-                tensor.data
-            )
+        tensor = input_tensors[0]
+        if self.axis is None:
+            tensor.grad_fn = lambda output_grad: np.ones_like(tensor.data) * output_grad
+        else:
+            tensor.grad_fn = lambda output_grad: np.expand_dims(output_grad, axis=self.axis)
 
 
 class Flatten(Operation):
@@ -426,9 +436,9 @@ def log(input_tensors: List[Tensor]) -> Tensor:
     return operation(input_tensors)
 
 
-def sum_tensors(input_tensors: List[Tensor]) -> Tensor:
+def sum_tensors(input_tensors: List[Tensor], axis: Union[int, None] = None) -> Tensor:
     operation = Sum()
-    return operation(input_tensors)
+    return operation(input_tensors, axis)
 
 
 def flatten(input_tensors: List[Tensor]) -> Tensor:

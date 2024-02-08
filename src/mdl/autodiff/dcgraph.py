@@ -61,10 +61,11 @@ class DCGraph:
 
     def backpropogate(self, tensor: Tensor) -> None:
         tensor_queue = self.topological_sort(tensor)
+        print(tensor_queue)
 
         while tensor_queue:
-            current = tensor_queue.pop()
-            current._backward()
+            current = tensor_queue.popleft()
+            current.backprop_calculation()
 
     def topological_sort(self, tensor: Tensor) -> Deque[Tensor]:
         visited = set(tensor.child_tensors)

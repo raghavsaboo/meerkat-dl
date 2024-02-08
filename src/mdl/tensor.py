@@ -39,7 +39,7 @@ class Tensor:
         return f"Tensor({self.data})"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.__dict__})"
+        return f"Tensor({self.data})"
 
     @property
     def data(self):
@@ -102,7 +102,7 @@ class Tensor:
         self._parent_broadcast_shape
 
     @parent_broadcast_shape.setter
-    def parent_broadcast_shape(self, shape: tuple[int]):
+    def parent_broadcast_shape(self, shape: Tuple[int]):
         self._parent_broadcast_shape = shape
 
     @property
@@ -115,23 +115,23 @@ class Tensor:
 
     @property
     def backward_fn(self):
-        self._backward_fn
+        return self._backward_fn
 
     @backward_fn.setter
     def backward_fn(self, function: Callable):
         self._backward_fn = function
 
     def set_gradients_to_zero(self):
-        self._grad = np.zeros_like(self._data)
+        self._grad = np.zeros_like(self._data, dtype=float)
 
     @staticmethod
     def _convert_to_ndarray(data: TensorDataTypes) -> np.ndarray:
         assert isinstance(
             data,
-            (float, int, list, np.ndarray),
+            (float, int, list, np.ndarray, np.generic),
         ), "Incompatible type for `data`. Expect float, int or numpy array."
 
-        return np.array(data)
+        return np.array(data, dtype=np.float32)
 
     def to_list(self):
         return self._data.tolist()
@@ -219,15 +219,15 @@ class Tensor:
 
         return exp([self])
 
-    def __log__(self) -> Tensor:
-        from mdl.operations import log
+    def __pow__(self, exponent: float) -> Tensor:
+        from mdl.operations import power
 
-        return log([self])
-
-    def sum(self) -> Tensor:
+        return power([self], exponent)
+    
+    def sum(self, axis: Union[int, None] = None) -> Tensor:
         from mdl.operations import sum_tensors
 
-        return sum_tensors([self])
+        return sum_tensors([self], axis)
 
     def flatten(self) -> Tensor:
         from mdl.operations import flatten
@@ -243,11 +243,11 @@ class Tensor:
         from mdl.operations import reshape
 
         return reshape([self], new_shape)
+    
+    def log(self) -> Tensor:
+        from mdl.operations import log
 
-    def pow(self, exponent: float) -> Tensor:
-        from mdl.operations import power
-
-        return power([self], exponent)
+        return log([self])
 
     def mean(self, axis: Union[int, None] = None) -> Tensor:
         from mdl.operations import mean
@@ -286,7 +286,7 @@ class Tensor:
     def backprop_calculation(self):
         for child in self.child_tensors:
             if self.requires_grad:
-                child.backward_fn(*[tensor for tensor in child.parent_tensors])
+                child.backward_fn([tensor for tensor in child.parent_tensors])
                 output_grad = child.grad
                 local_grad = self.grad_fn(output_grad)
                 local_grad = unbroadcast(
