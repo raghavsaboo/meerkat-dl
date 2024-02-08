@@ -67,7 +67,7 @@ class DCGraph:
             current._backward()
 
     def topological_sort(self, tensor: Tensor) -> Deque[Tensor]:
-        visited = set(tensor.children)
+        visited = set(tensor.child_tensors)
         tensor_queue: Deque[Tensor] = deque()
 
         def topo_sort(tensor):

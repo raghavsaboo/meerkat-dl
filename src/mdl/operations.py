@@ -21,14 +21,9 @@ class Operation(ABC):
         *args: Any,
         **kwargs: Any,
     ):
-        self.forward(input_tensors)
+        return self.forward(input_tensors)
 
-    @property
-    def requires_grad(self):
-        return self.requires_grad
-
-    @requires_grad.setter
-    def requires_grad(self, input_tensors: List[Tensor]) -> None:
+    def set_requires_grad(self, input_tensors: List[Tensor]) -> None:
         self.requires_grad = any(
             [tensor.requires_grad for tensor in input_tensors],
         )
@@ -71,8 +66,9 @@ class Operation(ABC):
         **kwargs: Any,
     ) -> Tensor:
         input_tensors = self.validate_input_tensors(input_tensors)
-        self.requires_grad(input_tensors)
-        self._forward(input_tensors, *args, **kwargs)
+        self.set_requires_grad(input_tensors)
+        result = self._forward(input_tensors, *args, **kwargs)
+        return result
 
     @abstractmethod
     def _forward(
@@ -448,3 +444,135 @@ def transpose(input_tensors: List[Tensor]) -> Tensor:
 def reshape(input_tensors: List[Tensor], new_shape: Tuple[int]) -> Tensor:
     operation = Reshape()
     return operation(input_tensors, new_shape)
+
+
+class Concatenate(Operation):
+    def _forward(self, input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+        result = Tensor(
+            np.concatenate([t.data for t in input_tensors], axis=axis),
+            self.requires_grad,
+        )
+
+        self.global_dc_graph.add_edge(result, input_tensors)
+
+        self.axis = axis
+
+        result.backward_fn = self.backward
+        result.parent_broadcast_shape = self.input_broadcast_shape(
+            input_tensors
+        )
+
+        return result
+
+    def backward(self, input_tensors: List[Tensor]) -> None:
+        indices = np.cumsum(
+            [t.data.shape[self.axis] for t in input_tensors[:-1]]
+        )
+        a = input_tensors[-1]
+
+        def grad_fn(output_grad):
+            return np.split(output_grad, indices, axis=self.axis)[:-1]
+
+        a.grad_fn = grad_fn
+
+
+def concatenate(input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+    operation = Concatenate()
+    return operation(input_tensors, axis)
+
+
+class Max(Operation):
+    def _forward(self, input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+        if len(input_tensors) != 1:
+            raise ValueError(
+                f"Expect 1 input tensor but got {len(input_tensors)}"
+            )
+
+        a = input_tensors[0]
+        self.axis = axis
+
+        result = Tensor(np.max(a.data, axis=self.axis), self.requires_grad)
+
+        self.global_dc_graph.add_edge(result, input_tensors)
+
+        result.backward_fn = self.backward
+        result.parent_broadcast_shape = self.input_broadcast_shape(
+            input_tensors
+        )
+
+        return result
+
+    def backward(self, input_tensors: List[Tensor]) -> None:
+        a = input_tensors[0]
+        a.grad_fn = lambda output_grad: output_grad * (
+            a.data == np.max(a.data, axis=self.axis)
+        )
+
+
+def max_operation(input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+    operation = Max()
+    return operation(input_tensors, axis)
+
+
+class Min(Operation):
+    def _forward(self, input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+        if len(input_tensors) != 1:
+            raise ValueError(
+                f"Expect 1 input tensor but got {len(input_tensors)}"
+            )
+
+        a = input_tensors[0]
+        self.axis = axis
+
+        result = Tensor(np.min(a.data, axis=self.axis), self.requires_grad)
+
+        self.global_dc_graph.add_edge(result, input_tensors)
+
+        result.backward_fn = self.backward
+        result.parent_broadcast_shape = self.input_broadcast_shape(
+            input_tensors
+        )
+
+        return result
+
+    def backward(self, input_tensors: List[Tensor]) -> None:
+        a = input_tensors[0]
+        a.grad_fn = lambda output_grad: output_grad * (
+            a.data == np.min(a.data, axis=self.axis)
+        )
+
+
+def min_operation(input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+    operation = Min()
+    return operation(input_tensors, axis)
+
+
+class Mean(Operation):
+    def _forward(self, input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+        if len(input_tensors) != 1:
+            raise ValueError(
+                f"Expect 1 input tensor but got {len(input_tensors)}"
+            )
+
+        a = input_tensors[0]
+        self.axis = axis
+
+        result = Tensor(np.mean(a.data, axis=axis), self.requires_grad)
+
+        self.global_dc_graph.add_edge(result, input_tensors)
+
+        result.backward_fn = self.backward
+        result.parent_broadcast_shape = self.input_broadcast_shape(
+            input_tensors
+        )
+
+        return result
+
+    def backward(self, input_tensors: List[Tensor]) -> None:
+        a = input_tensors[0]
+        a.grad_fn = lambda output_grad: output_grad * (1 / a.data.size)
+
+
+def mean(input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+    operation = Mean()
+    return operation(input_tensors, axis)

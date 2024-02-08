@@ -244,6 +244,31 @@ class Tensor:
 
         return reshape([self], new_shape)
 
+    def pow(self, exponent: float) -> Tensor:
+        from mdl.operations import power
+
+        return power([self], exponent)
+
+    def mean(self, axis: Union[int, None] = None) -> Tensor:
+        from mdl.operations import mean
+
+        return mean([self], axis)
+
+    def min(self, axis: Union[int, None] = None) -> Tensor:
+        from mdl.operations import min_operation
+
+        return min_operation([self], axis)
+
+    def max(self, axis: Union[int, None] = None) -> Tensor:
+        from mdl.operations import max_operation
+
+        return max_operation([self], axis)
+
+    def concatenate(self, other: Tensor, axis: int = 0) -> Tensor:
+        from mdl.operations import concatenate
+
+        return concatenate([self, other], axis)
+
     def backward(self, output_grad: TensorDataTypes = 1.0):
         if not self.requires_grad:
             raise Exception(
