@@ -7,7 +7,8 @@ from typing import Union
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
-from mdl.base.operations import Add
+from mdl.operations import add
+from mdl.utilities import unbroadcast
 
 TensorDataTypes = Union[float, int, list, np.ndarray]
 
@@ -20,6 +21,7 @@ class Tensor:
         self,
         data: TensorDataTypes,
         requires_grad: bool = False,
+        should_broadcast: bool = True,
     ) -> None:
         self._data = self._convert_to_ndarray(data)
         self._requires_grad = requires_grad
@@ -31,6 +33,8 @@ class Tensor:
         self._parent_tensors: List[Tensor] = []
         self._parent_broadcast_shape: Tuple[int] | None = None
         self._grad_fn: Callable | None = None
+        self._should_broadcast = should_broadcast
+        self._backward_fn: Callable | None = None
 
     def __str__(self):
         return f"Tensor({self.data})"
@@ -50,8 +54,16 @@ class Tensor:
         self.set_gradients_to_zero()
 
     @property
+    def should_broadcast(self):
+        return self._should_broadcast
+
+    @should_broadcast.setter
+    def should_broadcast(self, value: bool):
+        self._should_broadcast = value
+
+    @property
     def shape(self) -> Tuple[int, ...]:
-        return self._data.shape
+        return tuple(self._data.shape)
 
     @property
     def grad(self) -> np.ndarray:
@@ -96,18 +108,26 @@ class Tensor:
 
     @property
     def grad_fn(self):
-        self._grad_fn
+        return self._grad_fn
 
     @grad_fn.setter
     def grad_fn(self, function: Callable):
-        self._grad_fn = function
+        self._grad_fn = function if self.requires_grad else None
+
+    @property
+    def backward_fn(self):
+        self._backward_fn
+
+    @backward_fn.setter
+    def backward_fn(self, function: Callable):
+        self._backward_fn = function
 
     def set_gradients_to_zero(self):
         self._grad = np.zeros_like(self._data)
 
     @staticmethod
     def _convert_to_ndarray(data: TensorDataTypes) -> np.ndarray:
-        assert not isinstance(
+        assert isinstance(
             data,
             (float, int, list, np.ndarray),
         ), "Incompatible type for `data`. Expect float, int or numpy array."
@@ -121,8 +141,37 @@ class Tensor:
         return self._data
 
     def __add__(self, b: TensorDataTypes) -> Tensor:
-        addition_op = Add()
-        return addition_op.forward(self, b)
+        return add([self, b])
+
+    def __radd__(self, b: TensorDataTypes) -> Tensor:
+        return add([b, self])
+
+    def __iadd__(self, b: TensorDataTypes) -> Tensor:
+        return add([self, b])
+
+    def backward(self, output_grad: TensorDataTypes = 1.0):
+        if not self.requires_grad:
+            raise Exception(
+                "Can call backward only from tensors with requires_grad = True"
+            )
+
+        output_grad = self._convert_to_ndarray(output_grad)
+
+        if self.shape != output_grad.shape:
+            raise Exception("Shapes of gradient and Tensor need to match.")
+
+        self.accumulate_grad(output_grad)
+        self.global_dc_graph.backpropogate(self)
+        
+    def backprop_calculation(self):
+        for child in self.child_tensors:
+            if self.requires_grad:
+                child.backward_fn(*[tensor for tensor in child.parent_tensors])
+                output_grad = child.grad
+                local_grad = self.grad_fn(output_grad)
+                local_grad = unbroadcast(local_grad, self.shape, child.parent_broadcast_shape)
+                local_grad = local_grad.reshape(self.shape)
+                self.accumulate_grad(local_grad)
 
 
 class Parameter(Tensor):

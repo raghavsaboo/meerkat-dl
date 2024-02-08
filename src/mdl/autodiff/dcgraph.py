@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import List
 from typing import Set
 from typing import TYPE_CHECKING
-from typing import Union
+from typing import Deque
 
 if TYPE_CHECKING:
     from mdl.tensor import Tensor
 
+from collections import deque
 
 class DCGraph:
 
@@ -27,36 +28,49 @@ class DCGraph:
     def __repr__(self):
         return f"{self.__class__.__name__}({self.__dict__})"
 
-    @property
-    def tensor_nodes(self) -> Set[Tensor]:
-        return self.tensor_nodes
-
     def __len__(self):
         return len(self.tensor_nodes)
 
     def add_tensor_node(self, tensor: Tensor) -> None:
-        self.tensor_nodes.add(tensor)
+        if tensor not in self.tensor_nodes:
+            self.tensor_nodes.add(tensor)
 
     def remove_tensor_node(self, tensor: Tensor) -> Tensor:
         self.tensor_nodes.remove(tensor)
 
+    def add_edge(self, result: Tensor, operands: List[Tensor]) -> None:
+        self.add_tensor_node(result)
+
+        for operand in operands:
+            self.add_tensor_node(operand)
+            operand.add_child_tensor(result)
+            result.add_parent_tensor(operand)
+
     def reset_graph(self):
-        self.tensor_nodes = set()
+        self.tensor_nodes.clear()
 
-    def topological_sort(self) -> List[Union[Tensor, None]]:
-        visited = set()
-        stack = []
+    def backpropogate(self, tensor: Tensor):
+        tensor_queue = self.topological_sort(tensor)
+        
+        while tensor_queue:
+            current = tensor_queue.pop()
+            current._backward()
+        
+    def topological_sort(
+        self, tensor: Tensor
+    ) -> Deque[Tensor]:
+        visited = set(tensor.children)
+        tensor_queue = deque()
 
-        def visit(tensor_node, parents):
-            if tensor_node not in visited:
-                visited.add(tensor_node)
-                for child in tensor_node.children:
-                    visit(child, parents + [node])
-                stack.append((node, parents))
+        def topo_sort(tensor):
+            if tensor not in visited:
+                for child in tensor.child_tensors:
+                    topo_sort(child)
+                visited.add(tensor)
+                tensor_queue.append(tensor)
+                for parent in tensor.parent_tensors:
+                    topo_sort(parent)
 
-        for node in self.tensor_nodes:
-            visit(node, [])
+        topo_sort(tensor)
 
-        stack.sort(key=lambda x: len(x[1]))  # Sort by the number of parents
-
-        return [tensor_node for tensor_node, _ in stack]
+        return tensor_queue
