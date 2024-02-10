@@ -26,7 +26,7 @@ class Tensor:
         self._requires_grad = requires_grad
 
         if self._requires_grad:
-            self.set_gradients_to_zero()
+            self.zero_grad()
 
         self._child_tensors: List[Tensor] = []
         self._parent_tensors: List[Tensor] = []
@@ -50,7 +50,7 @@ class Tensor:
         self._data = self._convert_to_ndarray(data)
         # changing the data means that the current gradient
         # is invalid
-        self.set_gradients_to_zero()
+        self.zero_grad()
 
     @property
     def should_broadcast(self):
@@ -79,7 +79,7 @@ class Tensor:
     def requires_grad(self, requires_grad: bool = False):
         self._requires_grad = requires_grad
         # resetting grads after changing requesting grads
-        self.set_gradients_to_zero()
+        self.zero_grad()
 
     @property
     def child_tensors(self):
@@ -121,7 +121,7 @@ class Tensor:
     def backward_fn(self, function: Callable):
         self._backward_fn = function
 
-    def set_gradients_to_zero(self):
+    def zero_grad(self):
         self._grad = np.zeros_like(self._data, dtype=float)
 
     @staticmethod

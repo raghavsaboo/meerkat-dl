@@ -43,7 +43,7 @@ class DCGraph:
 
     def zero_grad(self):
         for tensor in self.tensor_nodes:
-            tensor.set_gradients_to_zero()
+            tensor.zero_grad()
 
     def add_tensor_node(self, tensor: Tensor) -> None:
         if tensor not in self.tensor_nodes:

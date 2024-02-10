@@ -3,12 +3,15 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from typing import Any
+from typing import Dict
 from typing import List
-from typing import Tuple, Union, Dict
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
-from mdl.tensor import Tensor, Parameter
+from mdl.tensor import Parameter
+from mdl.tensor import Tensor
 
 
 class Operation(ABC):
@@ -33,7 +36,9 @@ class Operation(ABC):
         input_tensors: List[Union[Tensor, Parameter]],
     ) -> List[Union[Tensor, Parameter]]:
         if not isinstance(input_tensors, list):
-            ValueError("Input should be passed as a list of Tensors/Parameters")
+            ValueError(
+                "Input should be passed as a list of Tensors/Parameters"
+            )
 
         validated_input_tensors = []
 
@@ -48,7 +53,9 @@ class Operation(ABC):
 
         return validated_input_tensors
 
-    def input_broadcast_shape(self, input_tensors: List[Union[Tensor, Parameter]]) -> Union[None, Tuple[int, ...]]:
+    def input_broadcast_shape(
+        self, input_tensors: List[Union[Tensor, Parameter]]
+    ) -> Union[None, Tuple[int, ...]]:
         for tensor in input_tensors:
             if not tensor.should_broadcast:
                 return None
@@ -89,31 +96,35 @@ class Operation(ABC):
 
 
 class ParameterOperation(Operation, ABC):
-    
+
     def __init__(self):
         super().__init__()
         self._eval = False
-        
-    def aggregate_parameters(self, as_list: bool = False) -> List[Parameter] | Dict[str, Parameter]:
+
+    def aggregate_parameters(
+        self, as_list: bool = False
+    ) -> List[Parameter] | Dict[str, Parameter]:
         parameters: Dict[str, Parameter] = dict()
         for name, value in self.__dict__.items():
             if isinstance(value, Parameter):
                 parameters[name] = value
-        
+
         return list(parameters.values()) if as_list else parameters
-    
+
     @property
     def eval(self):
         return self._eval
-    
+
     @eval.setter
     def eval(self, value: bool = False):
-        parameters = self.aggregate_parameters(as_list=True) # type: ignore[union-attr]
+        parameters = self.aggregate_parameters(
+            as_list=True
+        )  # type: ignore[union-attr]
         for param in parameters:
-            param.eval = value # type: ignore[union-attr]
-            
+            param.eval = value  # type: ignore[union-attr]
+
         self._eval = value
-        
+
     @abstractmethod
     def _forward(
         self,
@@ -130,8 +141,11 @@ class ParameterOperation(Operation, ABC):
         raise NotImplementedError(
             f"Backward pass not implemented for operator {self}",
         )
-        
-# TODO: add conv2d, conv3d, dropout, rnn cell, lstm cell as parameter operations
+
+
+# TODO: add conv2d, conv3d, dropout, rnn cell,
+# TODO: lstm cell as parameter operations
+
 
 class Add(Operation):
 
@@ -307,16 +321,18 @@ class Log(Operation):
 
 
 class Sum(Operation):
-    def _forward(self, input_tensors: List[Tensor], axis: Union[int, None]) -> Tensor:
+    def _forward(
+        self, input_tensors: List[Tensor], axis: Union[int, None]
+    ) -> Tensor:
         if len(input_tensors) != 1:
             raise ValueError(
                 f"Expect 1 input tensor but got {len(input_tensors)}"
             )
 
         a = input_tensors[0]
-        
+
         self.axis = axis
-        
+
         result = Tensor(
             np.sum(a.data, axis=self.axis),
             self.requires_grad,
@@ -334,9 +350,13 @@ class Sum(Operation):
     def backward(self, input_tensors: List[Tensor]) -> None:
         tensor = input_tensors[0]
         if self.axis is None:
-            tensor.grad_fn = lambda output_grad: np.ones_like(tensor.data) * output_grad
+            tensor.grad_fn = (
+                lambda output_grad: np.ones_like(tensor.data) * output_grad
+            )
         else:
-            tensor.grad_fn = lambda output_grad: np.expand_dims(output_grad, axis=self.axis)
+            tensor.grad_fn = lambda output_grad: np.expand_dims(
+                output_grad, axis=self.axis
+            )
 
 
 class Flatten(Operation):
@@ -481,7 +501,9 @@ def log(input_tensors: List[Tensor]) -> Tensor:
     return operation(input_tensors)
 
 
-def sum_tensors(input_tensors: List[Tensor], axis: Union[int, None] = None) -> Tensor:
+def sum_tensors(
+    input_tensors: List[Tensor], axis: Union[int, None] = None
+) -> Tensor:
     operation = Sum()
     return operation(input_tensors, axis)
 
