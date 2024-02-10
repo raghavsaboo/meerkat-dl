@@ -10,14 +10,17 @@ A Deep Learning Framework Just for Fun! 🥳
 $ pip install meerkat_dl
 ```
 
-## Usage
+## Todo
 
 - Automatic Differentiation [Done]
 - Computation Graph [Done]
-- Basic Layers (Dense, RNN, CNN)
-- Basic Activation Functions (ReLU, TanH, Sigmoid, Softmax)
-- Basic Optimizers (SGD, Adam)
-- Basic Loss Functions
+- Basic Layers (Dense [Done], RNN, CNN)
+- Basic Activation Functions (ReLU, TanH, Sigmoid, Softmax) [Done]
+- Basic Optimizers (SGD [Done], Adam)
+- Basic Loss Functions (MSE [Done], CE)
+- Write tests
+- Gradient checker
+- Correct dot, matrix multiplication, and element multiplication operators in Tensor
 
 ## Contributing
 

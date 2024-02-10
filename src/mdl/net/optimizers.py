@@ -35,7 +35,7 @@ class Optimizer(ABC):
 class GradientDescent(Optimizer):
 
     def __init__(self, params, learning_rate):
-        super.__init__(params, learning_rate)
+        super().__init__(params, learning_rate)
 
     def step(self):
         for param in self.parameters:

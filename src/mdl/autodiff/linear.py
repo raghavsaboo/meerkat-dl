@@ -11,8 +11,8 @@ from mdl.tensor import Tensor
 class Linear(ParameterOperation):
     def __init__(self, input_size: int, output_size: int):
         super().__init__()
-        self.weights = Parameter(np.random.randn(output_size, input_size))
-        self.bias = Parameter(np.zeros((output_size, 1)))
+        self.weights = Parameter(np.random.randn(input_size, output_size))
+        self.bias = Parameter(np.zeros((1, output_size)))
 
     def _forward(self, input_tensors: List[Tensor]) -> Tensor:
         if len(input_tensors) != 1:
@@ -20,7 +20,7 @@ class Linear(ParameterOperation):
         input_tensor = input_tensors[0]
 
         output_data = (
-            np.dot(self.weights.data, input_tensor.data) + self.bias.data
+            np.dot(input_tensor.data, self.weights.data) + self.bias.data
         )
         output_tensor = Tensor(output_data, requires_grad=self.requires_grad)
 
