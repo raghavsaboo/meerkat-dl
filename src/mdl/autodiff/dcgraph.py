@@ -41,11 +41,15 @@ class DCGraph:
     def tensor_nodes(self, value: Set[Union[Tensor, None]]):
         self._tensor_nodes = value
 
+    def zero_grad(self):
+        for tensor in self.tensor_nodes:
+            tensor.set_gradients_to_zero()
+
     def add_tensor_node(self, tensor: Tensor) -> None:
         if tensor not in self.tensor_nodes:
             self.tensor_nodes.add(tensor)
 
-    def remove_tensor_node(self, tensor: Tensor) -> Tensor:
+    def remove_tensor_node(self, tensor: Tensor) -> None:
         self.tensor_nodes.remove(tensor)
 
     def add_edge(self, result: Tensor, operands: List[Tensor]) -> None:

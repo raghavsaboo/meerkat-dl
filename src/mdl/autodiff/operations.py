@@ -4,11 +4,11 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Any
 from typing import List
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
-from mdl.tensor import Tensor
+from mdl.tensor import Tensor, Parameter
 
 
 class Operation(ABC):
@@ -17,10 +17,10 @@ class Operation(ABC):
 
     def __call__(
         self,
-        input_tensors: List[Tensor],
+        input_tensors: List[Union[Tensor, Parameter]],
         *args: Any,
         **kwargs: Any,
-    ):
+    ) -> Union[Tensor, Parameter]:
         return self.forward(input_tensors, *args, **kwargs)
 
     def set_requires_grad(self, input_tensors: List[Tensor]) -> None:
@@ -30,17 +30,17 @@ class Operation(ABC):
 
     def validate_input_tensors(
         self,
-        input_tensors: List[Tensor],
-    ) -> List[Tensor]:
+        input_tensors: List[Union[Tensor, Parameter]],
+    ) -> List[Union[Tensor, Parameter]]:
         if not isinstance(input_tensors, list):
-            ValueError("Input Tensors should be passed as a list of Tensors")
+            ValueError("Input should be passed as a list of Tensors/Parameters")
 
         validated_input_tensors = []
 
         for input_tensor in input_tensors:
-            if not isinstance(input_tensor, Tensor):
+            if not isinstance(input_tensor, (Tensor, Parameter)):
                 ValueError(
-                    f"Expected all inputs to be of type Tensor. \
+                    f"Expected all inputs to be of type Tensor or Parameter. \
                     Got {type(input_tensor)}"
                 )
             else:
@@ -48,7 +48,7 @@ class Operation(ABC):
 
         return validated_input_tensors
 
-    def input_broadcast_shape(self, input_tensors: List[Tensor]) -> Tensor:
+    def input_broadcast_shape(self, input_tensors: List[Union[Tensor, Parameter]]) -> Union[None, Tuple[int, ...]]:
         for tensor in input_tensors:
             if not tensor.should_broadcast:
                 return None
@@ -61,10 +61,10 @@ class Operation(ABC):
 
     def forward(
         self,
-        input_tensors: List[Tensor],
+        input_tensors: List[Union[Tensor, Parameter]],
         *args: Any,
         **kwargs: Any,
-    ) -> Tensor:
+    ) -> Union[Tensor, Parameter]:
         input_tensors = self.validate_input_tensors(input_tensors)
         self.set_requires_grad(input_tensors)
         result = self._forward(input_tensors, *args, **kwargs)
@@ -73,20 +73,65 @@ class Operation(ABC):
     @abstractmethod
     def _forward(
         self,
-        input_tensors: List[Tensor],
+        input_tensors: List[Union[Tensor, Parameter]],
         *args: Any,
         **kwargs: Any,
-    ) -> Tensor:
+    ) -> Union[Tensor, Parameter]:
         raise NotImplementedError(
             f"Forward method not implemented for operator {self}",
         )
 
     @abstractmethod
-    def backward(self, input_tensors: List[Tensor]) -> None:
+    def backward(self, input_tensors: List[Union[Tensor, Parameter]]) -> None:
         raise NotImplementedError(
             f"Backward pass not implemented for operator {self}",
         )
 
+
+class ParameterOperation(Operation, ABC):
+    
+    def __init__(self):
+        super().__init__()
+        self._eval = False
+        
+    def aggregate_parameters(self, as_list: bool = False) -> List[Parameter] | Dict[str, Parameter]:
+        parameters: Dict[str, Parameter] = dict()
+        for name, value in self.__dict__.items():
+            if isinstance(value, Parameter):
+                parameters[name] = value
+        
+        return list(parameters.values()) if as_list else parameters
+    
+    @property
+    def eval(self):
+        return self._eval
+    
+    @eval.setter
+    def eval(self, value: bool = False):
+        parameters = self.aggregate_parameters(as_list=True) # type: ignore[union-attr]
+        for param in parameters:
+            param.eval = value # type: ignore[union-attr]
+            
+        self._eval = value
+        
+    @abstractmethod
+    def _forward(
+        self,
+        input_tensors: List[Union[Tensor, Parameter]],
+        *args: Any,
+        **kwargs: Any,
+    ) -> Union[Tensor, Parameter]:
+        raise NotImplementedError(
+            f"Forward method not implemented for operator {self}",
+        )
+
+    @abstractmethod
+    def backward(self, input_tensors: List[Union[Tensor, Parameter]]) -> None:
+        raise NotImplementedError(
+            f"Backward pass not implemented for operator {self}",
+        )
+        
+# TODO: add conv2d, conv3d, dropout, rnn cell, lstm cell as parameter operations
 
 class Add(Operation):
 
@@ -491,37 +536,37 @@ def concatenate(input_tensors: List[Tensor], axis: int = 0) -> Tensor:
     return operation(input_tensors, axis)
 
 
-class Max(Operation):
-    def _forward(self, input_tensors: List[Tensor], axis: int = 0) -> Tensor:
-        if len(input_tensors) != 1:
-            raise ValueError(
-                f"Expect 1 input tensor but got {len(input_tensors)}"
-            )
+# class Max(Operation):
+#     def _forward(self, input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+#         if len(input_tensors) != 1:
+#             raise ValueError(
+#                 f"Expect 1 input tensor but got {len(input_tensors)}"
+#             )
 
-        a = input_tensors[0]
-        self.axis = axis
+#         a = input_tensors[0]
+#         self.axis = axis
 
-        result = Tensor(np.max(a.data, axis=self.axis), self.requires_grad)
+#         result = Tensor(np.max(a.data, axis=self.axis), self.requires_grad)
 
-        self.global_dc_graph.add_edge(result, input_tensors)
+#         self.global_dc_graph.add_edge(result, input_tensors)
 
-        result.backward_fn = self.backward
-        result.parent_broadcast_shape = self.input_broadcast_shape(
-            input_tensors
-        )
+#         result.backward_fn = self.backward
+#         result.parent_broadcast_shape = self.input_broadcast_shape(
+#             input_tensors
+#         )
 
-        return result
+#         return result
 
-    def backward(self, input_tensors: List[Tensor]) -> None:
-        a = input_tensors[0]
-        a.grad_fn = lambda output_grad: output_grad * (
-            a.data == np.max(a.data, axis=self.axis)
-        )
+#     def backward(self, input_tensors: List[Tensor]) -> None:
+#         a = input_tensors[0]
+#         a.grad_fn = lambda output_grad: output_grad * (
+#             a.data == np.max(a.data, axis=self.axis)
+#         )
 
 
-def max_operation(input_tensors: List[Tensor], axis: int = 0) -> Tensor:
-    operation = Max()
-    return operation(input_tensors, axis)
+# def max_operation(input_tensors: List[Tensor], axis: int = 0) -> Tensor:
+#     operation = Max()
+#     return operation(input_tensors, axis)
 
 
 class Min(Operation):

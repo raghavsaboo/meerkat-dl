@@ -12,8 +12,8 @@ $ pip install meerkat_dl
 
 ## Usage
 
-- Automatic Differentiation
-- Computation Graph
+- Automatic Differentiation [Done]
+- Computation Graph [Done]
 - Basic Layers (Dense, RNN, CNN)
 - Basic Activation Functions (ReLU, TanH, Sigmoid, Softmax)
 - Basic Optimizers (SGD, Adam)

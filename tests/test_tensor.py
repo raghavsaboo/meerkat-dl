@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import numpy as np
 import pytest
 from mdl.tensor import Tensor
+
 
 def test_tensor_creation():
     data = np.array([1, 2, 3])
@@ -8,6 +11,7 @@ def test_tensor_creation():
     assert np.array_equal(tensor.data, data)
     assert tensor.requires_grad is False
     assert tensor.should_broadcast is True
+
 
 def test_tensor_operations():
     tensor_a = Tensor(np.array([1, 2, 3]))
@@ -34,7 +38,7 @@ def test_tensor_operations():
     assert np.array_equal(result_div.data, expected_result_div.data)
 
     # Exponentiation
-    result_pow = tensor_a ** 2
+    result_pow = tensor_a**2
     expected_result_pow = Tensor(np.array([1, 4, 9]))
     assert np.array_equal(result_pow.data, expected_result_pow.data)
 
@@ -48,6 +52,7 @@ def test_tensor_operations():
     expected_result_sum = Tensor(np.array(6))
     assert np.array_equal(result_sum.data, expected_result_sum.data)
 
+
 def test_tensor_operations_with_simple_backward_pass():
     tensor_a = Tensor(np.array([1, 2, 3]), requires_grad=True)
     tensor_b = Tensor(np.array([4, 5, 6]), requires_grad=True)
@@ -60,6 +65,7 @@ def test_tensor_operations_with_simple_backward_pass():
     # Check gradients
     assert np.array_equal(tensor_a.grad, output_grad)
     assert np.array_equal(tensor_b.grad, output_grad)
+
 
 def test_complex_backward_pass():
     # Complex scenario with multiple operations and backward pass
@@ -83,5 +89,5 @@ def test_complex_backward_pass():
     assert np.array_equal(result_add.grad, np.array([7, 8, 9]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

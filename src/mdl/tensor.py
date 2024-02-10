@@ -140,132 +140,132 @@ class Tensor:
         return self._data
 
     def __add__(self, b: Tensor) -> Tensor:
-        from mdl.operations import add
+        from mdl.autodiff.operations import add
 
         return add([self, b])
 
     def __radd__(self, b: Tensor) -> Tensor:
-        from mdl.operations import add
+        from mdl.autodiff.operations import add
 
         return add([b, self])
 
     def __iadd__(self, b: Tensor) -> Tensor:
-        from mdl.operations import add
+        from mdl.autodiff.operations import add
 
         return add([self, b])
 
     def __sub__(self, other: Tensor) -> Tensor:
-        from mdl.operations import sub
+        from mdl.autodiff.operations import sub
 
         return sub([self, other])
 
     def __rsub__(self, other: Tensor) -> Tensor:
-        from mdl.operations import sub
+        from mdl.autodiff.operations import sub
 
         return sub([other, self])
 
     def __isub__(self, other: Tensor) -> Tensor:
-        from mdl.operations import sub
+        from mdl.autodiff.operations import sub
 
         return sub([self, other])
 
     def __mul__(self, other: Tensor) -> Tensor:
-        from mdl.operations import mul
+        from mdl.autodiff.operations import mul
 
         return mul([self, other])
 
     def __rmul__(self, other: Tensor) -> Tensor:
-        from mdl.operations import mul
+        from mdl.autodiff.operations import mul
 
         return mul([other, self])
 
     def __imul__(self, other: Tensor) -> Tensor:
-        from mdl.operations import mul
+        from mdl.autodiff.operations import mul
 
         return mul([self, other])
 
     def __truediv__(self, other: Tensor) -> Tensor:
-        from mdl.operations import div
+        from mdl.autodiff.operations import div
 
         return div([self, other])
 
     def __rtruediv__(self, other: Tensor) -> Tensor:
-        from mdl.operations import div
+        from mdl.autodiff.operations import div
 
         return div([other, self])
 
     def __itruediv__(self, other: Tensor) -> Tensor:
-        from mdl.operations import div
+        from mdl.autodiff.operations import div
 
         return div([self, other])
 
     def __matmul__(self, other: Tensor) -> Tensor:
-        from mdl.operations import dot
+        from mdl.autodiff.operations import dot
 
         return dot([self, other])
 
     def __rmatmul__(self, other: Tensor) -> Tensor:
-        from mdl.operations import dot
+        from mdl.autodiff.operations import dot
 
         return dot([other, self])
 
     def __imatmul__(self, other: Tensor) -> Tensor:
-        from mdl.operations import dot
+        from mdl.autodiff.operations import dot
 
         return dot([self, other])
 
     def __exp__(self) -> Tensor:
-        from mdl.operations import exp
+        from mdl.autodiff.operations import exp
 
         return exp([self])
 
     def __pow__(self, exponent: float) -> Tensor:
-        from mdl.operations import power
+        from mdl.autodiff.operations import power
 
         return power([self], exponent)
-    
+
     def sum(self, axis: Union[int, None] = None) -> Tensor:
-        from mdl.operations import sum_tensors
+        from mdl.autodiff.operations import sum_tensors
 
         return sum_tensors([self], axis)
 
     def flatten(self) -> Tensor:
-        from mdl.operations import flatten
+        from mdl.autodiff.operations import flatten
 
         return flatten([self])
 
     def transpose(self) -> Tensor:
-        from mdl.operations import transpose
+        from mdl.autodiff.operations import transpose
 
         return transpose([self])
 
     def reshape(self, new_shape: Tuple[int]) -> Tensor:
-        from mdl.operations import reshape
+        from mdl.autodiff.operations import reshape
 
         return reshape([self], new_shape)
-    
+
     def log(self) -> Tensor:
-        from mdl.operations import log
+        from mdl.autodiff.operations import log
 
         return log([self])
 
-    def mean(self, axis: Union[int, None] = None) -> Tensor:
-        from mdl.operations import mean
+    # def mean(self, axis: Union[int, None] = None) -> Tensor:
+    #     from mdl.autodiff.operations import mean
 
-        return mean([self], axis)
+    #     return mean([self], axis)
 
-    def min(self, axis: Union[int, None] = None) -> Tensor:
-        from mdl.operations import min_operation
+    # def min(self, axis: Union[int, None] = None) -> Tensor:
+    #     from mdl.autodiff.operations import min_operation
 
-        return min_operation([self], axis)
+    #     return min_operation([self], axis)
 
-    def max(self, axis: Union[int, None] = None) -> Tensor:
-        from mdl.operations import max_operation
+    # def max(self, axis: Union[int, None] = None) -> Tensor:
+    #     from mdl.autodiff.operations import max_operation
 
-        return max_operation([self], axis)
+    #     return max_operation([self], axis)
 
     def concatenate(self, other: Tensor, axis: int = 0) -> Tensor:
-        from mdl.operations import concatenate
+        from mdl.autodiff.operations import concatenate
 
         return concatenate([self, other], axis)
 
@@ -301,9 +301,18 @@ class Parameter(Tensor):
     def __init__(
         self,
         data: TensorDataTypes,
-        requires_grad: bool = False,
+        requires_grad: bool = True,
     ) -> None:
         super().__init__(data, requires_grad)
+        self._eval = False
+
+    @property
+    def eval(self) -> bool:
+        return self._eval
+
+    @eval.setter
+    def eval(self, value: bool = False) -> None:
+        self._eval = value
 
     @property
     def frozen(self):
