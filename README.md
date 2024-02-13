@@ -14,13 +14,13 @@ $ pip install meerkat_dl
 
 - Automatic Differentiation [Done]
 - Computation Graph [Done]
-- Basic Layers (Dense [Done], RNN, CNN)
+- Basic Layers (Dense [Done], RNN, CNN, LSTM, Attention)
 - Basic Activation Functions (ReLU, TanH, Sigmoid, Softmax) [Done]
-- Basic Optimizers (SGD [Done], Adam)
-- Basic Loss Functions (MSE [Done], CE)
+- Basic Optimizers (SGD [Done], Minibatch SGD, Adam, Momentum, Adagrad, RMSProp, Adadelta, Learning Rate Scheduling)
+- Basic Loss Functions (MSE [Done], CE, Hinge, Margin, Triplet, KL, NLL, MAE)
 - Write tests
 - Gradient checker
-- Correct dot, matrix multiplication, and element multiplication operators in Tensor
+- Correct dot, matrix multiplication, and element multiplication operators in Tensor [Done]
 
 ## Contributing
 

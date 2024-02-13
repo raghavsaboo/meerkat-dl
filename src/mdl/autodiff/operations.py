@@ -15,6 +15,19 @@ from mdl.tensor import Tensor
 
 
 class Operation(ABC):
+    """
+    The Operation class is an abstract base class (ABC) that
+    defines the interface for operations in the computational graph.
+
+    It includes methods for forward computation (_forward),
+    backward computation (backward), and other utility methods.
+
+    Operations are meant to be used for basic mathematical
+    operations like addition, multiplication, etc.
+
+    Instances of Operation are not meant to have any
+    learnable parameters (like weights or biases).
+    """
 
     global_dc_graph = DCGraph()
 
@@ -96,6 +109,19 @@ class Operation(ABC):
 
 
 class ParameterOperation(Operation, ABC):
+    """
+    The ParameterOperation class is a subclass of Operation
+    and extends it to handle operations with learnable parameters.
+
+    It introduces the concept of parameters, which are
+    tensors with associated gradients that can be updated during training.
+
+    It includes additional methods for managing parameters,
+    such as aggregate_parameters and eval.
+
+    Subclasses of ParameterOperation are expected to define
+    the forward and backward computations specific to their operation.
+    """
 
     def __init__(self):
         super().__init__()
@@ -149,6 +175,9 @@ class ParameterOperation(Operation, ABC):
 
 class Add(Operation):
 
+    def __init__(self):
+        super().__init__()
+
     def _forward(self, input_tensors: List[Tensor]) -> Tensor:
         if len(input_tensors) != 2:
             ValueError(f"Expect 2 input tensors but got {len(input_tensors)}")
@@ -173,6 +202,10 @@ class Add(Operation):
 
 
 class Sub(Operation):
+
+    def __init__(self):
+        super().__init__()
+
     def _forward(self, input_tensors: List[Tensor]) -> Tensor:
         if len(input_tensors) != 2:
             raise ValueError(
@@ -197,7 +230,63 @@ class Sub(Operation):
         b.grad_fn = lambda output_grad: output_grad * -1.0
 
 
+class BatchedMatMul(Operation):
+    def _forward(
+        self,
+        input_tensors: List[Union[Tensor, Parameter]],
+    ) -> Tensor:
+        if len(input_tensors) != 2:
+            raise ValueError(
+                "BatchedMatMul operation expects 2 input tensors."
+            )
+
+        batch_matrix1, batch_matrix2 = input_tensors
+
+        # Check the shapes of input tensors
+        if len(batch_matrix1.shape) != 3 or len(batch_matrix2.shape) != 3:
+            raise ValueError("Input tensors must be 3D batched matrices.")
+
+        batch_size, m, n = batch_matrix1.shape
+        _, _, p = batch_matrix2.shape
+
+        # Reshape matrices to 2D for batched multiplication
+        flat_matrix1 = batch_matrix1.data.reshape(batch_size * m, n)
+        flat_matrix2 = batch_matrix2.data.reshape(batch_size * n, p)
+
+        # Perform batched matrix multiplication
+        flat_result = np.dot(flat_matrix1, flat_matrix2)
+
+        # Reshape the result back to 3D
+        result_data = flat_result.reshape(batch_size, m, p)
+        result = Tensor(result_data, requires_grad=self.requires_grad)
+
+        # Add edges between output tensor and input tensors
+        self.global_dc_graph.add_edge(result, [batch_matrix1, batch_matrix2])
+
+        return result
+
+    def backward(self, input_tensors: List[Union[Tensor, Parameter]]) -> None:
+        if len(input_tensors) != 2:
+            raise ValueError(
+                "BatchedMatMul operation backward expects 2 input tensors."
+            )
+
+        batch_matrix1, batch_matrix2 = input_tensors
+
+        # Compute gradients with respect to input tensors
+        batch_matrix1.grad_fn = lambda output_grad: np.dot(
+            output_grad, batch_matrix2.data.transpose(0, 2, 1)
+        )
+        batch_matrix2.grad_fn = lambda output_grad: np.dot(
+            batch_matrix1.data.transpose(0, 2, 1), output_grad
+        )
+
+
 class Mul(Operation):
+    """
+    Hadamard product (elementwise multiplication)
+    """
+
     def _forward(self, input_tensors: List[Tensor]) -> Tensor:
         if len(input_tensors) != 2:
             raise ValueError(
@@ -459,6 +548,11 @@ class Pow(Operation):
         a.grad_fn = lambda output_grad: output_grad * (
             a.data ** (self.exponent - 1)
         )
+
+
+def bmm(input_tensors: List[Tensor]) -> Tensor:
+    operation = BatchedMatMul()
+    return operation(input_tensors)
 
 
 def power(input_tensors: List[Tensor], exponent: float) -> Tensor:

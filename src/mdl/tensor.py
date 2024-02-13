@@ -224,6 +224,11 @@ class Tensor:
 
         return power([self], exponent)
 
+    def bmm(self, other: Tensor) -> Tensor:
+        from mdl.autodiff.operations import bmm
+
+        return bmm([self, other])
+
     def sum(self, axis: Union[int, None] = None) -> Tensor:
         from mdl.autodiff.operations import sum_tensors
 

@@ -43,7 +43,7 @@ class Layer(ABC):
     @abstractmethod
     def forward(
         self,
-        input_tensor,
+        input_tensor: Tensor,
         *args: Any,
         **kwargs: Any,
     ) -> Tensor:
@@ -186,8 +186,8 @@ class LinearLayer(Layer):
         super().__init__()
         self.linear_op = Linear(input_size=input_size, output_size=output_size)
 
-    def forward(self, input_tensors: List[Tensor]) -> Tensor:
-        output = self.linear_op(input_tensors=input_tensors)
+    def forward(self, input_tensor: Tensor) -> Tensor:
+        output = self.linear_op(input_tensors=[input_tensor])
         return output
 
 
