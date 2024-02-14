@@ -291,10 +291,11 @@ class Tensor:
     def backprop_calculation(self):
         for child in self.child_tensors:
             if self.requires_grad:
-                # only pass parent tensors
-                # parent parameters are available to the ParameterOperation object
+                # only pass parent tensors, parameters
+                # are available to the ParameterOperation object
                 parent_tensors = [
-                    tensor for tensor in child.parent_tensors 
+                    tensor
+                    for tensor in child.parent_tensors
                     if not isinstance(tensor, Parameter)
                 ]
                 child.backward_fn(parent_tensors)

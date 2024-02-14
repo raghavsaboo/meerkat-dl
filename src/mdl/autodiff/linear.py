@@ -27,12 +27,12 @@ class Linear(ParameterOperation):
         parents = [input_tensor, self.weights, self.bias]
         # Add edges between output tensor and parameter tensors
         self.global_dc_graph.add_edge(output_tensor, parents)
-        
+
         output_tensor.backward_fn = self.backward
         output_tensor.parent_broadcast_shape = self.input_broadcast_shape(
             parents
         )
-        
+
         return output_tensor
 
     def backward(self, input_tensors: List[Tensor]) -> None:

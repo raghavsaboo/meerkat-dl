@@ -7,12 +7,12 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
-from typing_extensions import override
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
 from mdl.tensor import Parameter
 from mdl.tensor import Tensor
+from typing_extensions import override
 
 
 class Operation(ABC):
@@ -129,23 +129,23 @@ class ParameterOperation(Operation, ABC):
         super().__init__()
         self._eval = False
 
-    def aggregate_parameters(
-        self, as_list: bool = False
-    ) -> List[Parameter] | Dict[str, Parameter]:
+    def aggregate_parameters_as_dict(self) -> Dict[str, Parameter]:
         parameters: Dict[str, Parameter] = dict()
         for name, value in self.__dict__.items():
             if isinstance(value, Parameter):
                 parameters[name] = value
 
-        return list(parameters.values()) if as_list else parameters
-    
+        return parameters
+
+    def aggregate_parameters_as_list(self) -> List[Parameter]:
+        return list(self.aggregate_parameters_as_dict().values())
+
     @override
     def set_requires_grad(self, input_tensors: List[Tensor]) -> None:
         self.requires_grad = any(
-            [tensor.requires_grad for tensor in input_tensors] 
-            + self.aggregate_parameters(as_list=True),
+            [tensor.requires_grad for tensor in input_tensors]
+            + self.aggregate_parameters_as_list(),
         )
-
 
     @property
     def eval(self):
@@ -153,11 +153,9 @@ class ParameterOperation(Operation, ABC):
 
     @eval.setter
     def eval(self, value: bool = False):
-        parameters = self.aggregate_parameters(
-            as_list=True
-        )  # type: ignore[union-attr]
+        parameters = self.aggregate_parameters_as_list()
         for param in parameters:
-            param.eval = value  # type: ignore[union-attr]
+            param.eval = value
 
         self._eval = value
 

@@ -26,7 +26,7 @@ class Layer(ABC):
 
     @eval.setter
     def eval(self, value: bool = False) -> None:
-        parameters = self.aggregate_parameters(as_list=True)
+        parameters = self.aggregate_parameters_as_list()
         for parameter in parameters:
             parameter.eval = value  # type: ignore[union-attr]
 
@@ -51,22 +51,23 @@ class Layer(ABC):
             f"Forward method not implemented for layer {self}",
         )
 
-    def aggregate_parameters(
-        self, as_list: bool = False
-    ) -> List[Parameter] | Dict[str, Parameter]:
+    def aggregate_parameters_as_dict(self) -> Dict[str, Parameter]:
         parameters = dict()
         for name, value in self.__dict__.items():
             if isinstance(value, Parameter):
                 parameters[name] = value
             elif isinstance(value, ParameterOperation):
-                operation_params = value.aggregate_parameters(as_list=False)
+                operation_params = value.aggregate_parameters_as_dict()
                 for (
                     sub_name,
                     sub_param,
                 ) in operation_params.items():  # type: ignore[union-attr]
                     parameters[f"{name}.{sub_name}"] = sub_param
 
-        return list(parameters.values()) if as_list else parameters
+        return parameters
+
+    def aggregate_parameters_as_list(self) -> List[Parameter]:
+        return list(self.aggregate_parameters_as_dict().values())
 
 
 class Sequence(ABC):
@@ -87,20 +88,21 @@ class Sequence(ABC):
             input_tensor = output
         return output
 
-    def aggregate_parameters(
-        self, as_list: bool = False
-    ) -> List[Parameter] | Dict[str, Parameter]:
+    def aggregate_parameters_as_dict(self) -> Dict[str, Parameter]:
         parameters = dict()
         for index, layer in enumerate(self.layers):
             name = f"SequenceLayer{index}"
-            layer_parameters = layer.aggregate_parameters(as_list=False)
+            layer_parameters = layer.aggregate_parameters_as_dict()
             for (
                 sub_name,
                 sub_param,
             ) in layer_parameters.items():  # type: ignore[union-attr]
                 parameters[f"{name}.{sub_name}"] = sub_param
 
-        return list(parameters.values()) if as_list else parameters
+        return parameters
+
+    def aggregate_parameters_as_list(self) -> List[Parameter]:
+        return list(self.aggregate_parameters_as_dict().values())
 
     @property
     def eval(self) -> bool:
@@ -108,7 +110,7 @@ class Sequence(ABC):
 
     @eval.setter
     def eval(self, value: bool = False) -> None:
-        parameters = self.aggregate_parameters(as_list=True)
+        parameters = self.aggregate_parameters_as_list()
         for parameter in parameters:
             parameter.eval = value  # type: ignore[union-attr]
 
@@ -126,9 +128,7 @@ class Module(ABC):
     def __init__(self):
         self._eval: bool = False
 
-    def aggregate_parameters(
-        self, as_list: bool = False
-    ) -> List[Parameter] | Dict[str, Parameter]:
+    def aggregate_parameters_as_dict(self) -> Dict[str, Parameter]:
         parameters = dict()
 
         for name, value in self.__dict__.items():
@@ -137,16 +137,17 @@ class Module(ABC):
             elif isinstance(
                 value, (Module, Layer, Sequence, ParameterOperation)
             ):
-                sub_params = value.aggregate_parameters(
-                    as_list=False
-                )  # type: ignore[union-attr]
+                sub_params = value.aggregate_parameters_as_dict()
                 for (
                     sub_name,
                     sub_param,
-                ) in sub_params.items():  # type: ignore[union-attr]
+                ) in sub_params.items():
                     parameters[f"{name}.{sub_name}"] = sub_param
 
-        return list(parameters.values()) if as_list else parameters
+        return parameters
+
+    def aggregate_parameters_as_list(self) -> List[Parameter]:
+        return list(self.aggregate_parameters_as_dict().values())
 
     @property
     def eval(self) -> bool:
@@ -154,7 +155,7 @@ class Module(ABC):
 
     @eval.setter
     def eval(self, value: bool = False) -> None:
-        parameters = self.aggregate_parameters(as_list=True)
+        parameters = self.aggregate_parameters_as_list()
         for parameter in parameters:
             parameter.eval = value  # type: ignore[union-attr]
 

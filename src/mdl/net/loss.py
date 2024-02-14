@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
+
 from mdl.tensor import Tensor
+
 
 class Loss(ABC):
 
@@ -17,7 +19,7 @@ class Loss(ABC):
         return Tensor(outputs.shape[0])
 
     @abstractmethod
-    def forward(self, outputs, targets):
+    def forward(self, outputs, targets) -> Tensor:
         raise NotImplementedError("Loss needs a forward function")
 
 

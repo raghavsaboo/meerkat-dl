@@ -70,7 +70,9 @@ class DCGraph:
             current = tensor_queue.popleft()
             current.backprop_calculation()
 
-    def topological_sort(self, tensor: Tensor) -> Deque[Union[Tensor, Parameter]]:
+    def topological_sort(
+        self, tensor: Tensor
+    ) -> Deque[Union[Tensor, Parameter]]:
         visited = set(tensor.child_tensors)
         tensor_queue: Deque[Union[Tensor, Parameter]] = deque()
 
