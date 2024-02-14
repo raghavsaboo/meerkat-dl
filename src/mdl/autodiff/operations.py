@@ -7,6 +7,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
+from typing_extensions import override
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
@@ -66,8 +67,9 @@ class Operation(ABC):
 
         return validated_input_tensors
 
+    @staticmethod
     def input_broadcast_shape(
-        self, input_tensors: List[Union[Tensor, Parameter]]
+        input_tensors: List[Union[Tensor, Parameter]]
     ) -> Union[None, Tuple[int, ...]]:
         for tensor in input_tensors:
             if not tensor.should_broadcast:
@@ -136,6 +138,14 @@ class ParameterOperation(Operation, ABC):
                 parameters[name] = value
 
         return list(parameters.values()) if as_list else parameters
+    
+    @override
+    def set_requires_grad(self, input_tensors: List[Tensor]) -> None:
+        self.requires_grad = any(
+            [tensor.requires_grad for tensor in input_tensors] 
+            + self.aggregate_parameters(as_list=True),
+        )
+
 
     @property
     def eval(self):

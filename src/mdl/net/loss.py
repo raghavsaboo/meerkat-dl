@@ -2,19 +2,19 @@ from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
-
+from mdl.tensor import Tensor
 
 class Loss(ABC):
 
     def __call__(self, outputs, targets):
-        self.batch_size = self.batch_size(outputs)
+        self.batch_size = self.calc_batch_size(outputs)
         return self.forward(outputs, targets)
 
     @staticmethod
-    def batch_size(outputs):
+    def calc_batch_size(outputs):
         if outputs.shape == ():
-            return 1
-        return outputs.shape[0]
+            return Tensor(1)
+        return Tensor(outputs.shape[0])
 
     @abstractmethod
     def forward(self, outputs, targets):

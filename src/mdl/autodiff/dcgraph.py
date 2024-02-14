@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 if TYPE_CHECKING:
-    from mdl.tensor import Tensor
+    from mdl.tensor import Tensor, Parameter
 
 from collections import deque
 
@@ -65,15 +65,14 @@ class DCGraph:
 
     def backpropogate(self, tensor: Tensor) -> None:
         tensor_queue = self.topological_sort(tensor)
-        print(tensor_queue)
 
         while tensor_queue:
             current = tensor_queue.popleft()
             current.backprop_calculation()
 
-    def topological_sort(self, tensor: Tensor) -> Deque[Tensor]:
+    def topological_sort(self, tensor: Tensor) -> Deque[Union[Tensor, Parameter]]:
         visited = set(tensor.child_tensors)
-        tensor_queue: Deque[Tensor] = deque()
+        tensor_queue: Deque[Union[Tensor, Parameter]] = deque()
 
         def topo_sort(tensor):
             if tensor not in visited:

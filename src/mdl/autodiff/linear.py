@@ -24,9 +24,15 @@ class Linear(ParameterOperation):
         )
         output_tensor = Tensor(output_data, requires_grad=self.requires_grad)
 
+        parents = [input_tensor, self.weights, self.bias]
         # Add edges between output tensor and parameter tensors
-        self.global_dc_graph.add_edge(output_tensor, [self.weights, self.bias])
-
+        self.global_dc_graph.add_edge(output_tensor, parents)
+        
+        output_tensor.backward_fn = self.backward
+        output_tensor.parent_broadcast_shape = self.input_broadcast_shape(
+            parents
+        )
+        
         return output_tensor
 
     def backward(self, input_tensors: List[Tensor]) -> None:
@@ -38,7 +44,7 @@ class Linear(ParameterOperation):
 
         # Compute gradients with respect to parameters
         self.weights.grad_fn = lambda output_grad: np.dot(
-            output_grad, input_tensor.data.T
+            input_tensor.data.T, output_grad
         )
         self.bias.grad_fn = lambda output_grad: np.sum(
             output_grad, axis=1, keepdims=True

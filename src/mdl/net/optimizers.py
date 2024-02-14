@@ -40,4 +40,4 @@ class GradientDescent(Optimizer):
     def step(self):
         for param in self.parameters:
             if param.requires_grad:
-                param.data -= self.lr * param.grad
+                param.data -= self.learning_rate * param.grad

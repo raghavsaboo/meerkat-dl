@@ -99,7 +99,7 @@ class Tensor:
 
     @property
     def parent_broadcast_shape(self):
-        self._parent_broadcast_shape
+        return self._parent_broadcast_shape
 
     @parent_broadcast_shape.setter
     def parent_broadcast_shape(self, shape: Tuple[int]):
@@ -291,7 +291,13 @@ class Tensor:
     def backprop_calculation(self):
         for child in self.child_tensors:
             if self.requires_grad:
-                child.backward_fn([tensor for tensor in child.parent_tensors])
+                # only pass parent tensors
+                # parent parameters are available to the ParameterOperation object
+                parent_tensors = [
+                    tensor for tensor in child.parent_tensors 
+                    if not isinstance(tensor, Parameter)
+                ]
+                child.backward_fn(parent_tensors)
                 output_grad = child.grad
                 local_grad = self.grad_fn(output_grad)
                 local_grad = unbroadcast(
