@@ -341,7 +341,9 @@ class Div(Operation):
     def backward(self, input_tensors: List[Tensor]) -> None:
         a, b = input_tensors
         a.grad_fn = lambda output_grad: output_grad / b.data
-        b.grad_fn = lambda output_grad: output_grad * (-a.data / (b.data**2))
+        b.grad_fn = lambda output_grad: output_grad * (
+            -1 * a.data / np.power(b.data, 2)
+        )
 
 
 class Dot(Operation):
@@ -540,7 +542,7 @@ class Pow(Operation):
         a = input_tensors[0]
         self.exponent = exponent
 
-        result = Tensor(a.data**self.exponent, self.requires_grad)
+        result = Tensor(np.power(a.data, self.exponent), self.requires_grad)
 
         self.global_dc_graph.add_edge(result, input_tensors)
 
@@ -553,8 +555,10 @@ class Pow(Operation):
 
     def backward(self, input_tensors: List[Tensor]) -> None:
         a = input_tensors[0]
-        a.grad_fn = lambda output_grad: output_grad * (
-            a.data ** (self.exponent - 1)
+        a.grad_fn = (
+            lambda output_grad: self.exponent
+            * output_grad
+            * (a.data ** (self.exponent - 1))
         )
 
 

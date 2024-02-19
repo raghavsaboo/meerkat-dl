@@ -21,7 +21,7 @@ class DCGraph:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.tensor_nodes: Set[Union[Tensor, None]] = set()
+            cls._instance.tensor_nodes = set()
         return cls._instance
 
     def __str__(self):
@@ -38,7 +38,7 @@ class DCGraph:
         return self._tensor_nodes
 
     @tensor_nodes.setter
-    def tensor_nodes(self, value: Set[Union[Tensor, None]]):
+    def tensor_nodes(self, value: Set[Union[Tensor | Parameter | None]]):
         self._tensor_nodes = value
 
     def zero_grad(self):

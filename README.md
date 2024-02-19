@@ -14,7 +14,7 @@ $ pip install meerkat_dl
 
 - Automatic Differentiation [Done]
 - Computation Graph [Done]
-- Basic Layers (Dense [Done], RNN, CNN (2D and 3D), LSTM, Attention, Dropout)
+- Basic Layers (Dense [Done], RNN, CNN (2D and 3D), LSTM, Attention, Dropout, MaxPool, BatchNorm, LayerNorm, Initialization)
 - Basic Activation Functions (ReLU, TanH, Sigmoid, Softmax) [Done]
 - Basic Optimizers (SGD [Done], Minibatch SGD, Adam, Momentum, Adagrad, RMSProp, Adadelta, Learning Rate Scheduling)
 - Basic Loss Functions (MSE [Done], CE, SoftMaxCE, Hinge, Margin, Triplet, KL, NLL, MAE)
@@ -24,6 +24,8 @@ $ pip install meerkat_dl
 - Remove duplicate code in Operations forward pass
 - Fix Min, Max, Mean, Flatten operations
 - Add regularization
+- Add reset graph for backward pass
+- Add named parameters and named modules 
 
 ## Contributing
 

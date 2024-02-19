@@ -47,11 +47,5 @@ class Linear(ParameterOperation):
             input_tensor.data.T, output_grad
         )
         self.bias.grad_fn = lambda output_grad: np.sum(
-            output_grad, axis=1, keepdims=True
-        )
-
-        # No need for input gradients for a linear layer
-        weights_data_transpose = self.weights.data.T
-        input_tensor.grad_fn = lambda output_grad: np.dot(
-            output_grad, weights_data_transpose
+            output_grad, axis=0, keepdims=True
         )

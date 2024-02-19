@@ -23,9 +23,11 @@ class Loss(ABC):
         raise NotImplementedError("Loss needs a forward function")
 
 
-class MeanSquaredLoss(Loss):
+class MeanSquaredErrorLoss(Loss):
 
     def forward(self, outputs, targets):
-        squared_error = (outputs - targets) ** 2
+        diff = outputs - targets
+        squared_error = (diff) ** 2
         sum_squared_errors = squared_error.sum()
-        return sum_squared_errors / self.batch_size
+        loss = sum_squared_errors / (self.batch_size * Tensor(2.0))
+        return loss

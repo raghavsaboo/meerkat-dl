@@ -50,7 +50,7 @@ class Tensor:
         self._data = self._convert_to_ndarray(data)
         # changing the data means that the current gradient
         # is invalid
-        self.zero_grad()
+        # self.zero_grad()
 
     @property
     def should_broadcast(self):
@@ -131,7 +131,7 @@ class Tensor:
             (float, int, list, np.ndarray, np.generic),
         ), "Incompatible type for `data`. Expect float, int or numpy array."
 
-        return np.array(data, dtype=np.float32)
+        return np.array(data, dtype=np.float64)
 
     def to_list(self):
         return self._data.tolist()
@@ -287,6 +287,8 @@ class Tensor:
 
         self.accumulate_grad(output_grad)
         self.global_dc_graph.backpropogate(self)
+        # TODO: add reset graph here if retain_graph=False
+        # --> to free up buffers
 
     def backprop_calculation(self):
         for child in self.child_tensors:

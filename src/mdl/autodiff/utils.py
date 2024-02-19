@@ -33,8 +33,8 @@ def gradient_checker(
     input_tensor: Tensor,
     target: Tensor,
     loss_fn: Loss,
-    epsilon=1e-7,
-) -> np.float32:
+    epsilon=1e-12,
+) -> np.float64:
 
     parameters = component.aggregate_parameters_as_list()
 
@@ -53,27 +53,23 @@ def gradient_checker(
     for param in parameters:
         if param.requires_grad:
             for index in np.ndindex(param.shape):
-                original_data = param.data.copy()
-
                 backprop_gradients.append(param.grad[index])
-
                 param.data[index] += epsilon
                 pos_perturbation_loss = calculate_loss(
                     component, input_tensor, target, loss_fn
-                )
-                param.data = original_data
-                param.data[index] -= epsilon
+                ).data
+                param.data[index] -= 2 * epsilon
                 neg_perturbation_loss = calculate_loss(
                     component, input_tensor, target, loss_fn
-                )
-                param.data = original_data
+                ).data
+                param.data[index] += epsilon
 
                 perturbed_gradients.append(
                     (pos_perturbation_loss - neg_perturbation_loss)
                     / (2 * epsilon)
                 )
 
-            param.zero_grad()
+        param.zero_grad()
 
     perturbed_gradients = np.asarray(perturbed_gradients)  # type: ignore
     backprop_gradients = np.asarray(backprop_gradients)  # type: ignore
