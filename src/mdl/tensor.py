@@ -15,6 +15,8 @@ TensorDataTypes = Union[float, int, list, np.ndarray]
 class Tensor:
 
     global_dc_graph = DCGraph()
+    
+    # TODO: Add slots for parameters
 
     def __init__(
         self,

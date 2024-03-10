@@ -7,7 +7,7 @@ from mdl.autodiff.operations import ParameterOperation
 from mdl.tensor import Parameter
 from mdl.tensor import Tensor
 
-
+# TODO: make bias optional
 class Linear(ParameterOperation):
     def __init__(self, input_size: int, output_size: int):
         super().__init__()
