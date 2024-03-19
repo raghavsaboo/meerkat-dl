@@ -37,6 +37,7 @@ def gradient_checker(
 ) -> np.float64:
 
     parameters = component.aggregate_parameters_as_list()
+    print(f"parameters: {parameters}")
 
     for param in parameters:
         param.zero_grad()
@@ -73,6 +74,9 @@ def gradient_checker(
 
     perturbed_gradients = np.asarray(perturbed_gradients)  # type: ignore
     backprop_gradients = np.asarray(backprop_gradients)  # type: ignore
+    
+    print(f"perturbed_gradients: {perturbed_gradients}")
+    print(f"backprop_gradients: {backprop_gradients}")
 
     diff = np.linalg.norm(
         perturbed_gradients - backprop_gradients  # type: ignore

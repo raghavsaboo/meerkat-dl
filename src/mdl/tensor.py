@@ -8,7 +8,6 @@ from typing import Union
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
 from mdl.utilities import unbroadcast
-from mdl.autodiff.operations import slicer
 
 TensorDataTypes = Union[float, int, list, np.ndarray]
 
@@ -71,6 +70,7 @@ class Tensor:
         return id(self)
     
     def __getitem__(self, key):
+        from mdl.autodiff.operations import slicer
         if isinstance(key, (slice, int, tuple)):
             return slicer([self], key)
         else:

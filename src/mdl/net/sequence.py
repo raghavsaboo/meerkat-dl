@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import List
 
 import numpy as np
-from mdl.net.layer import Layer
+from mdl.net.layer import Layer, Module
 from mdl.tensor import Parameter
 from mdl.tensor import Tensor
 from mdl.net.activation import ActivationFunction
@@ -12,7 +12,7 @@ from mdl.autodiff.operations import stack
 
 class RNNCell(Layer):
     def __init__(self, input_size: int, hidden_size: int, use_bias: bool = True, activation: Activation = Activation.TANH):
-        super(RNNCell, self).__init__()
+        super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.use_bias = use_bias
@@ -42,23 +42,23 @@ class RNNCell(Layer):
         # Combining input and hidden contributions
         combined = input_contrib + hidden_contrib
         
-        new_hidden_state = self.activation(combined)
+        new_hidden_state = self.activation([combined])
 
         return new_hidden_state
     
 
-class RNNLayer(Layer):
+class RNNLayer(Module):
     def __init__(self, input_size: int, hidden_size: int):
         super().__init__()
         self.rnn_cell = RNNCell(input_size, hidden_size)  # Assuming RNNCell also follows the framework's conventions
         self.hidden_size = hidden_size
 
-    def forward(self, input_tensor: Tensor) -> List[Tensor]:
+    def forward(self, input_tensor: Tensor) -> Tensor:
         """
         Processes an input sequence through the RNNLayer, inheriting from the Layer class.
 
         :param input_tensor: A Tensor of shape (sequence_length, batch_size, input_feature_size).
-        :return: A list of hidden state Tensors for each time step.
+        :return: A Tensor of hidden states for each time step, shape (sequence_length, batch_size, hidden_size).
         """
         sequence_length, batch_size, _ = input_tensor.shape
         hidden_states = []
@@ -67,10 +67,10 @@ class RNNLayer(Layer):
         hidden_state = Tensor(np.zeros((batch_size, self.hidden_size)), requires_grad=True)
 
         for t in range(sequence_length):
-            current_input = input_tensor[t, :, :]  # Using enhanced slicing for tensors
+            current_input = input_tensor[t, :, :]  # Slice to get the input for timestamp t
             hidden_state = self.rnn_cell.forward(current_input, hidden_state)
             hidden_states.append(hidden_state)
             
-        hidden_states = stack(hidden_states, axis=0)
+        hidden_states_tensor = stack(hidden_states, axis=0)
 
-        return hidden_states
+        return hidden_states_tensor

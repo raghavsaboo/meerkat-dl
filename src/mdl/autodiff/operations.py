@@ -903,6 +903,9 @@ class Stack(Operation):
         result = Tensor(stacked_data, self.requires_grad)
 
         self.global_dc_graph.add_edge(result, input_tensors)
+        # Set backward function and parent broadcast shape
+        result.backward_fn = self.backward
+        result.parent_broadcast_shape = self.input_broadcast_shape(input_tensors)
 
         return result
 

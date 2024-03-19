@@ -28,29 +28,23 @@ def test_linear():
     )
     assert diff < 1e-7
 
-def test_rnn_cell():
+def test_rnn_layer():
     input_size, hidden_size = 10, 20
     seq_length, batch_size = 5, 10
 
-    # Create an instance of the RNNCell
-    rnn_cell = RNNLayer(input_size, hidden_size)
+    # Create an instance of the RNNLayer
+    rnn_layer = RNNLayer(input_size, hidden_size)
 
     # Generate random input sequence
     input_sequence = Tensor(np.random.rand(seq_length, batch_size, input_size))
     # Generate random target output for loss calculation
-    target_output = Tensor(np.random.rand(batch_size, hidden_size))
+    target_output = Tensor(np.random.rand(seq_length, batch_size, hidden_size), requires_grad=False)
+    #target_output = Tensor(np.random.rand(batch_size, hidden_size))
     # Instantiate the loss function
     loss_fn = MeanSquaredErrorLoss()
 
-    # Initial hidden state
-    hidden_state = Tensor(np.zeros((batch_size, hidden_size)))
-
-    # Simulate forward pass through the sequence
-    for t in range(seq_length):
-        hidden_state = rnn_cell(input_sequence[t], hidden_state)
-
     diff = gradient_checker(
-        component=rnn_cell,
+        component=rnn_layer,
         input_tensor=input_sequence,
         target=target_output,
         loss_fn=loss_fn,
