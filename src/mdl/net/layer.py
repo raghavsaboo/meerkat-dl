@@ -6,7 +6,6 @@ from typing import Any
 from typing import Dict
 from typing import List
 
-from mdl.autodiff.linear import Linear
 from mdl.autodiff.operations import ParameterOperation
 from mdl.tensor import Parameter
 from mdl.tensor import Tensor
@@ -179,17 +178,6 @@ class Module(ABC):
         raise NotImplementedError(
             f"Forward method not implemented for layer {self}",
         )
-
-
-class LinearLayer(Layer):
-
-    def __init__(self, input_size: int, output_size: int):
-        super().__init__()
-        self.linear_op = Linear(input_size=input_size, output_size=output_size)
-
-    def forward(self, input_tensor: Tensor) -> Tensor:
-        output = self.linear_op(input_tensors=[input_tensor])
-        return output
 
 
 # TODO: add all parameter operations as layers

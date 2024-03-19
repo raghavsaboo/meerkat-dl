@@ -2,7 +2,9 @@
 
 ![MeerkatDL](./misc/meerkatdl.png)
 
-A Deep Learning Framework Just for Fun! 🥳
+A Deep Learning Framework Just for Fun and Education! 🥳
+
+Its purpose is to be a readable and quick to understand reference for building a library like PyTorch with Autodiff written completely in Python.
 
 ## Installation
 
@@ -26,6 +28,7 @@ $ pip install meerkat_dl
 - Add regularization
 - Add reset graph for backward pass
 - Add named parameters and named modules 
+- Weights initialization
 
 ## Contributing
 

@@ -1,7 +1,8 @@
 import numpy as np
 
 from mdl.net.loss import MeanSquaredErrorLoss
-from mdl.autodiff.linear import Linear
+from mdl.net.linear import LinearLayer
+from mdl.net.sequence import RNNCell, RNNLayer
 from mdl.autodiff.utils import gradient_checker
 from mdl.tensor import Tensor
 
@@ -10,7 +11,7 @@ def test_linear():
     batch_size = 10
 
     # Create an instance of the Linear operation
-    linear = Linear(input_size, output_size)
+    linear = LinearLayer(input_size, output_size)
 
     # Generate random input tensor
     input_tensor = Tensor(np.random.rand(batch_size, input_size))
@@ -22,6 +23,36 @@ def test_linear():
         component=linear,
         input_tensor=input_tensor,
         target=target_tensor,
+        loss_fn=loss_fn,
+        epsilon=1e-7,
+    )
+    assert diff < 1e-7
+
+def test_rnn_cell():
+    input_size, hidden_size = 10, 20
+    seq_length, batch_size = 5, 10
+
+    # Create an instance of the RNNCell
+    rnn_cell = RNNLayer(input_size, hidden_size)
+
+    # Generate random input sequence
+    input_sequence = Tensor(np.random.rand(seq_length, batch_size, input_size))
+    # Generate random target output for loss calculation
+    target_output = Tensor(np.random.rand(batch_size, hidden_size))
+    # Instantiate the loss function
+    loss_fn = MeanSquaredErrorLoss()
+
+    # Initial hidden state
+    hidden_state = Tensor(np.zeros((batch_size, hidden_size)))
+
+    # Simulate forward pass through the sequence
+    for t in range(seq_length):
+        hidden_state = rnn_cell(input_sequence[t], hidden_state)
+
+    diff = gradient_checker(
+        component=rnn_cell,
+        input_tensor=input_sequence,
+        target=target_output,
         loss_fn=loss_fn,
         epsilon=1e-7,
     )

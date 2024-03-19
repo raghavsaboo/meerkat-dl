@@ -5,6 +5,7 @@ from typing import List
 from typing import Set
 from typing import TYPE_CHECKING
 from typing import Union
+from threading import Lock
 
 if TYPE_CHECKING:
     from mdl.tensor import Tensor, Parameter
@@ -15,13 +16,13 @@ from collections import deque
 class DCGraph:
 
     _instance: DCGraph | None = None
+    _lock: Lock = Lock()
 
-    # Singleton pattern (ensuring that only one instance of the DCGraph)
-    # is created. If an instance exists, return that instance instead.
     def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.tensor_nodes = set()
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance.tensor_nodes = set()
         return cls._instance
 
     def __str__(self):

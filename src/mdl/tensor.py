@@ -8,22 +8,45 @@ from typing import Union
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
 from mdl.utilities import unbroadcast
+from mdl.autodiff.operations import slicer
 
 TensorDataTypes = Union[float, int, list, np.ndarray]
 
 
 class Tensor:
+    """
+    Represents a tensor with autograd capabilities.
+    """
+
+    __slots__ = [
+        "_data",
+        "_requires_grad",
+        "_child_tensors",
+        "_parent_tensors",
+        "_parent_broadcast_shape",
+        "_grad_fn",
+        "_should_broadcast",
+        "_backward_fn",
+        "_grad",
+        "_eval",
+    ]
 
     global_dc_graph = DCGraph()
     
-    # TODO: Add slots for parameters
-
     def __init__(
         self,
         data: TensorDataTypes,
         requires_grad: bool = False,
         should_broadcast: bool = True,
     ) -> None:
+        """
+        Initializes a Tensor object.
+
+        Args:
+            data (TensorDataTypes): The data of the tensor.
+            requires_grad (bool): Whether the tensor requires gradient computation.
+            should_broadcast (bool): Whether broadcasting should be applied in operations.
+        """
         self._data = self._convert_to_ndarray(data)
         self._requires_grad = requires_grad
 
@@ -36,12 +59,23 @@ class Tensor:
         self._grad_fn: Callable | None = None
         self._should_broadcast = should_broadcast
         self._backward_fn: Callable | None = None
+        self._eval = False
 
     def __str__(self):
         return f"Tensor({self.data})"
 
     def __repr__(self):
         return f"Tensor({self.data})"
+    
+    def __hash__(self):
+        return id(self)
+    
+    def __getitem__(self, key):
+        if isinstance(key, (slice, int, tuple)):
+            return slicer([self], key)
+        else:
+            raise TypeError("Unsupported key type for Tensor slicing.")
+         
 
     @property
     def data(self):
@@ -50,9 +84,6 @@ class Tensor:
     @data.setter
     def data(self, data: TensorDataTypes):
         self._data = self._convert_to_ndarray(data)
-        # changing the data means that the current gradient
-        # is invalid
-        # self.zero_grad()
 
     @property
     def should_broadcast(self):
@@ -71,6 +102,8 @@ class Tensor:
         return self._grad
 
     def accumulate_grad(self, gradient: TensorDataTypes):
+        if self.shape != gradient.shape:
+            raise ValueError("Shapes of gradient and Tensor need to match")
         self._grad += gradient
 
     @property
@@ -134,6 +167,48 @@ class Tensor:
         ), "Incompatible type for `data`. Expect float, int or numpy array."
 
         return np.array(data, dtype=np.float64)
+
+    @classmethod
+    def zeros(cls, shape: Union[int, Tuple[int, ...]], requires_grad: bool = False) -> Tensor:
+        """
+        Creates a tensor filled with zeros.
+
+        Args:
+            shape (Union[int, Tuple[int, ...]]): The shape of the tensor.
+            requires_grad (bool): Whether the tensor requires gradient computation.
+
+        Returns:
+            Tensor: A tensor filled with zeros.
+        """
+        return cls(np.zeros(shape), requires_grad=requires_grad)
+
+    @classmethod
+    def ones(cls, shape: Union[int, Tuple[int, ...]], requires_grad: bool = False) -> Tensor:
+        """
+        Creates a tensor filled with ones.
+
+        Args:
+            shape (Union[int, Tuple[int, ...]]): The shape of the tensor.
+            requires_grad (bool): Whether the tensor requires gradient computation.
+
+        Returns:
+            Tensor: A tensor filled with ones.
+        """
+        return cls(np.ones(shape), requires_grad=requires_grad)
+
+    @classmethod
+    def random(cls, shape: Union[int, Tuple[int, ...]], requires_grad: bool = False) -> Tensor:
+        """
+        Creates a tensor filled with random values.
+
+        Args:
+            shape (Union[int, Tuple[int, ...]]): The shape of the tensor.
+            requires_grad (bool): Whether the tensor requires gradient computation.
+
+        Returns:
+            Tensor: A tensor filled with random values.
+        """
+        return cls(np.random.rand(*shape), requires_grad=requires_grad)
 
     def to_list(self):
         return self._data.tolist()
@@ -226,6 +301,29 @@ class Tensor:
 
         return power([self], exponent)
 
+    def __abs__(self) -> Tensor:
+        from mdl.autodiff.operations import abs_operation
+
+        return abs_operation([self])
+
+    def __eq__(self, other: Tensor) -> Tensor:
+        return Tensor(self._data == other._data)
+
+    def __ne__(self, other: Tensor) -> Tensor:
+        return Tensor(self._data != other._data)
+
+    def __lt__(self, other: Tensor) -> Tensor:
+        return Tensor(self._data < other._data)
+
+    def __gt__(self, other: Tensor) -> Tensor:
+        return Tensor(self._data > other._data)
+
+    def __le__(self, other: Tensor) -> Tensor:
+        return Tensor(self._data <= other._data)
+
+    def __ge__(self, other: Tensor) -> Tensor:
+        return Tensor(self._data >= other._data)
+
     def bmm(self, other: Tensor) -> Tensor:
         from mdl.autodiff.operations import bmm
 
@@ -256,20 +354,20 @@ class Tensor:
 
         return log([self])
 
-    # def mean(self, axis: Union[int, None] = None) -> Tensor:
-    #     from mdl.autodiff.operations import mean
+    def mean(self, axis: Union[int, None] = None) -> Tensor:
+        from mdl.autodiff.operations import mean
 
-    #     return mean([self], axis)
+        return mean([self], axis)
 
-    # def min(self, axis: Union[int, None] = None) -> Tensor:
-    #     from mdl.autodiff.operations import min_operation
+    def min(self, axis: Union[int, None] = None) -> Tensor:
+        from mdl.autodiff.operations import min_operation
 
-    #     return min_operation([self], axis)
+        return min_operation([self], axis)
 
-    # def max(self, axis: Union[int, None] = None) -> Tensor:
-    #     from mdl.autodiff.operations import max_operation
+    def max(self, axis: Union[int, None] = None) -> Tensor:
+        from mdl.autodiff.operations import max_operation
 
-    #     return max_operation([self], axis)
+        return max_operation([self], axis)
 
     def concatenate(self, other: Tensor, axis: int = 0) -> Tensor:
         from mdl.autodiff.operations import concatenate
@@ -295,12 +393,9 @@ class Tensor:
     def backprop_calculation(self):
         for child in self.child_tensors:
             if self.requires_grad:
-                # only pass parent tensors, parameters
-                # are available to the ParameterOperation object
                 parent_tensors = [
                     tensor
                     for tensor in child.parent_tensors
-                    if not isinstance(tensor, Parameter)
                 ]
                 child.backward_fn(parent_tensors)
                 output_grad = child.grad
