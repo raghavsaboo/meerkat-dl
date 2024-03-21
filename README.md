@@ -12,7 +12,7 @@ Its purpose is to be a readable and quick to understand reference for building a
 $ pip install meerkat_dl
 ```
 
-## Todo
+## Features
 
 - [x] Automatic Differentiation
 - [x] Tensor Operations

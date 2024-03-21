@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "mdl"
 version = "0.1.0"
-description = "A Deep Learning Framework Just for Fun!"
+description = "A Deep Learning Framework written purely in Numpy/CuPy for educative purposes and fun!"
 authors = ["Raghav Saboo"]
 license = "MIT"
 readme = "README.md"
