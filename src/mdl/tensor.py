@@ -78,6 +78,14 @@ class Tensor:
         else:
             raise TypeError("Unsupported key type for Tensor slicing.")
 
+    def __setitem__(self, key, value):
+        if isinstance(key, (slice, int, tuple)):
+            self.data[key] = value
+        else:
+            raise TypeError(
+                "Unsupported key type for Tensor indexed assigment."
+            )
+
     @property
     def data(self):
         return self._data

@@ -28,7 +28,6 @@ $ pip install meerkat_dl
   - [ ] MaxPool
   - [ ] BatchNorm
   - [ ] LayerNorm
-- [ ] Pooling
 - [ ] Initialization
   - [ ] He
   - [ ] Xavier/Glorot

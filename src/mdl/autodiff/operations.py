@@ -178,10 +178,6 @@ class ParameterOperation(Operation, ABC):
         )
 
 
-# TODO: add conv2d, conv3d, dropout, rnn cell,
-# TODO: lstm cell as parameter operations
-
-
 class Add(Operation):
 
     def __init__(self):
