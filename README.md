@@ -39,8 +39,8 @@ $ pip install meerkat_dl
   - [x] Sigmoid
   - [x] Softmax
 - [ ] Optimizers
-  - [x] SGD
-  - [x] Minibatch SGD
+  - [x] Gradient Descent
+  - [ ] Stochastic Gradient Descent
   - [ ] Adam
   - [ ] Momentum
   - [ ] Adagrad
@@ -51,16 +51,17 @@ $ pip install meerkat_dl
   - [ ] Exponential Decay
   - [ ] Learning Rate Warmup
   - [ ] Cosine Annealing
-- [ ] Loss Functions
-  - [ ] MSE
-  - [ ] CE
-  - [ ] SoftMaxCE
-  - [ ] Hinge
+- [x] Loss Functions
+  - [x] Mean Squared Error
+  - [x] Cross Entropy
+  - [x] Binary Cross Entropy
+  - [x] Hinge
   - [ ] Margin
   - [ ] Triplet
-  - [ ] KL
+  - [x] KL
   - [ ] NLL
   - [ ] MAE
+  - [x] Dice
 - [x] Gradient checker
 - [ ] Remove duplicate code in Operations forward pass
 - [ ] Fix Min, Max, Mean, Flatten operations
