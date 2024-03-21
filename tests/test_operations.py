@@ -1,10 +1,12 @@
-import numpy as np
+from __future__ import annotations
 
-from mdl.net.loss import MeanSquaredErrorLoss
-from mdl.net.linear import LinearLayer
-from mdl.net.sequence import RNNCell, RNNLayer
+import numpy as np
 from mdl.autodiff.utils import gradient_checker
+from mdl.net.linear import LinearLayer
+from mdl.net.loss import MeanSquaredErrorLoss
+from mdl.net.sequence import RNNLayer
 from mdl.tensor import Tensor
+
 
 def test_linear():
     input_size, output_size = 20, 10
@@ -28,6 +30,7 @@ def test_linear():
     )
     assert diff < 1e-7
 
+
 def test_rnn_layer():
     input_size, hidden_size = 10, 20
     seq_length, batch_size = 5, 10
@@ -38,8 +41,11 @@ def test_rnn_layer():
     # Generate random input sequence
     input_sequence = Tensor(np.random.rand(seq_length, batch_size, input_size))
     # Generate random target output for loss calculation
-    target_output = Tensor(np.random.rand(seq_length, batch_size, hidden_size), requires_grad=False)
-    #target_output = Tensor(np.random.rand(batch_size, hidden_size))
+    target_output = Tensor(
+        np.random.rand(seq_length, batch_size, hidden_size),
+        requires_grad=False,
+    )
+    # target_output = Tensor(np.random.rand(batch_size, hidden_size))
     # Instantiate the loss function
     loss_fn = MeanSquaredErrorLoss()
 

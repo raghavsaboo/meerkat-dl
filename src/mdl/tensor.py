@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import Callable
 from typing import List
 from typing import Tuple
-from typing import Union
 
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
 from mdl.utilities import unbroadcast
 
-TensorDataTypes = Union[float, int, list, np.ndarray]
+TensorDataTypes = float | int | list | np.ndarray
 
 
 class Tensor:
@@ -31,7 +30,7 @@ class Tensor:
     ]
 
     global_dc_graph = DCGraph()
-    
+
     def __init__(
         self,
         data: TensorDataTypes,
@@ -43,8 +42,10 @@ class Tensor:
 
         Args:
             data (TensorDataTypes): The data of the tensor.
-            requires_grad (bool): Whether the tensor requires gradient computation.
-            should_broadcast (bool): Whether broadcasting should be applied in operations.
+            requires_grad (bool): Whether the tensor
+                requires gradient computation.
+            should_broadcast (bool): Whether broadcasting
+                should be applied in operations.
         """
         self._data = self._convert_to_ndarray(data)
         self._requires_grad = requires_grad
@@ -65,17 +66,17 @@ class Tensor:
 
     def __repr__(self):
         return f"Tensor({self.data})"
-    
+
     def __hash__(self):
         return id(self)
-    
+
     def __getitem__(self, key):
         from mdl.autodiff.operations import slicer
+
         if isinstance(key, (slice, int, tuple)):
             return slicer([self], key)
         else:
             raise TypeError("Unsupported key type for Tensor slicing.")
-         
 
     @property
     def data(self):
@@ -102,8 +103,6 @@ class Tensor:
         return self._grad
 
     def accumulate_grad(self, gradient: TensorDataTypes):
-        if self.shape != gradient.shape:
-            raise ValueError("Shapes of gradient and Tensor need to match")
         self._grad += gradient
 
     @property
@@ -169,13 +168,17 @@ class Tensor:
         return np.array(data, dtype=np.float64)
 
     @classmethod
-    def zeros(cls, shape: Union[int, Tuple[int, ...]], requires_grad: bool = False) -> Tensor:
+    def zeros(
+        cls, shape: int | Tuple[int, ...], requires_grad: bool = False
+    ) -> Tensor:
         """
         Creates a tensor filled with zeros.
 
         Args:
-            shape (Union[int, Tuple[int, ...]]): The shape of the tensor.
-            requires_grad (bool): Whether the tensor requires gradient computation.
+            shape (Union[int, Tuple[int, ...]]):
+                The shape of the tensor.
+            requires_grad (bool):
+                Whether the tensor requires gradient computation.
 
         Returns:
             Tensor: A tensor filled with zeros.
@@ -183,13 +186,17 @@ class Tensor:
         return cls(np.zeros(shape), requires_grad=requires_grad)
 
     @classmethod
-    def ones(cls, shape: Union[int, Tuple[int, ...]], requires_grad: bool = False) -> Tensor:
+    def ones(
+        cls, shape: int | Tuple[int, ...], requires_grad: bool = False
+    ) -> Tensor:
         """
         Creates a tensor filled with ones.
 
         Args:
-            shape (Union[int, Tuple[int, ...]]): The shape of the tensor.
-            requires_grad (bool): Whether the tensor requires gradient computation.
+            shape (Union[int, Tuple[int, ...]]):
+                The shape of the tensor.
+            requires_grad (bool):
+                Whether the tensor requires gradient computation.
 
         Returns:
             Tensor: A tensor filled with ones.
@@ -197,13 +204,17 @@ class Tensor:
         return cls(np.ones(shape), requires_grad=requires_grad)
 
     @classmethod
-    def random(cls, shape: Union[int, Tuple[int, ...]], requires_grad: bool = False) -> Tensor:
+    def random(
+        cls, shape: int | Tuple[int, ...], requires_grad: bool = False
+    ) -> Tensor:
         """
         Creates a tensor filled with random values.
 
         Args:
-            shape (Union[int, Tuple[int, ...]]): The shape of the tensor.
-            requires_grad (bool): Whether the tensor requires gradient computation.
+            shape (Union[int, Tuple[int, ...]]):
+                The shape of the tensor.
+            requires_grad (bool):
+                Whether the tensor requires gradient computation.
 
         Returns:
             Tensor: A tensor filled with random values.
@@ -216,160 +227,172 @@ class Tensor:
     def to_array(self):
         return self._data
 
-    def __add__(self, b: Tensor) -> Tensor:
+    def __add__(self, other: Tensor | Parameter) -> Tensor:
         from mdl.autodiff.operations import add
 
-        return add([self, b])
+        return add([self, other])
 
-    def __radd__(self, b: Tensor) -> Tensor:
+    def __radd__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import add
 
-        return add([b, self])
+        return add([other, self])
 
-    def __iadd__(self, b: Tensor) -> Tensor:
+    def __iadd__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import add
 
-        return add([self, b])
+        return add([self, other])
 
-    def __sub__(self, other: Tensor) -> Tensor:
+    def __sub__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import sub
 
         return sub([self, other])
 
-    def __rsub__(self, other: Tensor) -> Tensor:
+    def __rsub__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import sub
 
         return sub([other, self])
 
-    def __isub__(self, other: Tensor) -> Tensor:
+    def __isub__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import sub
 
         return sub([self, other])
 
-    def __mul__(self, other: Tensor) -> Tensor:
+    def __mul__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import mul
 
         return mul([self, other])
 
-    def __rmul__(self, other: Tensor) -> Tensor:
+    def __rmul__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import mul
 
         return mul([other, self])
 
-    def __imul__(self, other: Tensor) -> Tensor:
+    def __imul__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import mul
 
         return mul([self, other])
 
-    def __truediv__(self, other: Tensor) -> Tensor:
+    def __truediv__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import div
 
         return div([self, other])
 
-    def __rtruediv__(self, other: Tensor) -> Tensor:
+    def __rtruediv__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import div
 
         return div([other, self])
 
-    def __itruediv__(self, other: Tensor) -> Tensor:
+    def __itruediv__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import div
 
         return div([self, other])
 
-    def __matmul__(self, other: Tensor) -> Tensor:
+    def __matmul__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import dot
 
         return dot([self, other])
 
-    def __rmatmul__(self, other: Tensor) -> Tensor:
+    def __rmatmul__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import dot
 
         return dot([other, self])
 
-    def __imatmul__(self, other: Tensor) -> Tensor:
+    def __imatmul__(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import dot
 
         return dot([self, other])
 
-    def __exp__(self) -> Tensor:
+    def __exp__(self) -> Tensor | Parameter:
         from mdl.autodiff.operations import exp
 
         return exp([self])
 
-    def __pow__(self, exponent: float) -> Tensor:
+    def __pow__(self, exponent: float) -> Tensor | Parameter:
         from mdl.autodiff.operations import power
 
         return power([self], exponent)
 
-    def __abs__(self) -> Tensor:
+    def __abs__(self) -> Tensor | Parameter:
         from mdl.autodiff.operations import abs_operation
 
         return abs_operation([self])
 
-    def __eq__(self, other: Tensor) -> Tensor:
-        return Tensor(self._data == other._data)
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Tensor | Parameter):
+            return NotImplemented
+        return self._data == other._data
 
-    def __ne__(self, other: Tensor) -> Tensor:
-        return Tensor(self._data != other._data)
+    def __ne__(self, other: object) -> bool:
+        return not (self == other)
 
-    def __lt__(self, other: Tensor) -> Tensor:
+    def __lt__(self, other: object) -> Tensor:
+        if not isinstance(other, Tensor | Parameter):
+            return NotImplemented
         return Tensor(self._data < other._data)
 
     def __gt__(self, other: Tensor) -> Tensor:
+        if not isinstance(other, Tensor | Parameter):
+            return NotImplemented
         return Tensor(self._data > other._data)
 
     def __le__(self, other: Tensor) -> Tensor:
+        if not isinstance(other, Tensor | Parameter):
+            return NotImplemented
         return Tensor(self._data <= other._data)
 
     def __ge__(self, other: Tensor) -> Tensor:
+        if not isinstance(other, Tensor | Parameter):
+            return NotImplemented
         return Tensor(self._data >= other._data)
 
-    def bmm(self, other: Tensor) -> Tensor:
+    def bmm(self, other: Tensor | Parameter) -> Tensor | Parameter:
         from mdl.autodiff.operations import bmm
 
         return bmm([self, other])
 
-    def sum(self, axis: Union[int, None] = None) -> Tensor:
+    def sum(self, axis: int | None = None) -> Tensor | Parameter:
         from mdl.autodiff.operations import sum_tensors
 
         return sum_tensors([self], axis)
 
-    def flatten(self) -> Tensor:
+    def flatten(self) -> Tensor | Parameter:
         from mdl.autodiff.operations import flatten
 
         return flatten([self])
 
-    def transpose(self) -> Tensor:
+    def transpose(self) -> Tensor | Parameter:
         from mdl.autodiff.operations import transpose
 
         return transpose([self])
 
-    def reshape(self, new_shape: Tuple[int]) -> Tensor:
+    def reshape(self, new_shape: Tuple[int]) -> Tensor | Parameter:
         from mdl.autodiff.operations import reshape
 
         return reshape([self], new_shape)
 
-    def log(self) -> Tensor:
+    def log(self) -> Tensor | Parameter:
         from mdl.autodiff.operations import log
 
         return log([self])
 
-    def mean(self, axis: Union[int, None] = None) -> Tensor:
+    def mean(self, axis: int | None = None) -> Tensor | Parameter:
         from mdl.autodiff.operations import mean
 
         return mean([self], axis)
 
-    def min(self, axis: Union[int, None] = None) -> Tensor:
+    def min(self, axis: int | None = None) -> Tensor | Parameter:
         from mdl.autodiff.operations import min_operation
 
         return min_operation([self], axis)
 
-    def max(self, axis: Union[int, None] = None) -> Tensor:
+    def max(self, axis: int | None = None) -> Tensor | Parameter:
         from mdl.autodiff.operations import max_operation
 
         return max_operation([self], axis)
 
-    def concatenate(self, other: Tensor, axis: int = 0) -> Tensor:
+    def concatenate(
+        self, other: Tensor | Parameter, axis: int = 0
+    ) -> Tensor | Parameter:
         from mdl.autodiff.operations import concatenate
 
         return concatenate([self, other], axis)
@@ -393,10 +416,7 @@ class Tensor:
     def backprop_calculation(self):
         for child in self.child_tensors:
             if self.requires_grad:
-                parent_tensors = [
-                    tensor
-                    for tensor in child.parent_tensors
-                ]
+                parent_tensors = [tensor for tensor in child.parent_tensors]
                 child.backward_fn(parent_tensors)
                 output_grad = child.grad
                 local_grad = self.grad_fn(output_grad)

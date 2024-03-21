@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from threading import Lock
 from typing import Deque
 from typing import List
 from typing import Set
 from typing import TYPE_CHECKING
 from typing import Union
-from threading import Lock
 
 if TYPE_CHECKING:
     from mdl.tensor import Tensor, Parameter

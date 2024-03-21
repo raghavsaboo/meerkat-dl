@@ -14,19 +14,25 @@ $ pip install meerkat_dl
 
 ## Todo
 
- - [x] Automatic Differentiation
-- [x] Computation Graph [Done]
+- [x] Automatic Differentiation
+- [x] Tensor Operations
+- [x] Computation Graph
 - [ ] Layers:
   - [x] Dense
   - [x] RNN
-  - [ ] CNN (2D and 3D)
-  - [ ] LSTM
+  - [x] LSTM
+  - [x] GRU
+  - [x] Convolution (2D and 3D)
   - [ ] Attention
   - [ ] Dropout
   - [ ] MaxPool
   - [ ] BatchNorm
   - [ ] LayerNorm
+- [ ] Pooling
 - [ ] Initialization
+  - [ ] He
+  - [ ] Xavier/Glorot
+  - [ ] LeCun
 - [x] Activation Functions
   - [x] ReLU
   - [x] TanH
@@ -41,6 +47,10 @@ $ pip install meerkat_dl
   - [ ] RMSProp
   - [ ] Adadelta
 - [ ] Learning Rate Scheduling
+  - [ ] Step Decay
+  - [ ] Exponential Decay
+  - [ ] Learning Rate Warmup
+  - [ ] Cosine Annealing
 - [ ] Loss Functions
   - [ ] MSE
   - [ ] CE
@@ -51,14 +61,23 @@ $ pip install meerkat_dl
   - [ ] KL
   - [ ] NLL
   - [ ] MAE
-- [ ] Gradient checker
+- [x] Gradient checker
 - [ ] Remove duplicate code in Operations forward pass
 - [ ] Fix Min, Max, Mean, Flatten operations
 - [ ] Add regularization
+  - [ ] L1/L2
+  - [ ] DropBlock
+  - [ ] Label Smoothing
 - [ ] Add reset graph for backward pass
+- [ ] Eval mode
+- [ ] Checkpointing
+- [ ] Serializing
 - [ ] Add named parameters and named modules 
-- [ ] Write tests
-- [ ] Write examples
+- [ ] Model Summary Functionality
+- [ ] Dataset Loader
+- [ ] Write Tests
+- [ ] Write Examples
+- [ ] Support GPU
 
 ## Contributing
 

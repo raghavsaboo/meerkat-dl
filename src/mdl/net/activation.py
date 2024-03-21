@@ -1,41 +1,11 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import List
 
 import numpy as np
 from mdl.autodiff.operations import ParameterOperation
 from mdl.tensor import Tensor
-from enum import Enum, auto
-
-
-class Activation(Enum):
-    TANH = auto()
-    RELU = auto()
-    SIGMOID = auto()
-    LEAKY_RELU = auto()
-    SWISH = auto()
-    GELU = auto()
-    MISH = auto()
-
-
-class ActivationFunction:
-    @staticmethod
-    def get(activation_type: Activation) -> ParameterOperation:
-        activation_map = {
-            Activation.TANH: Tanh,
-            Activation.RELU: ReLU,
-            Activation.SIGMOID: Sigmoid,
-            Activation.LEAKY_RELU: LeakyReLU,
-            Activation.SWISH: Swish,
-            Activation.GELU: GELU,
-            Activation.MISH: Mish,
-        }
-
-        activation_class = activation_map.get(activation_type)
-        if not activation_class:
-            raise ValueError(f"Unsupported activation type: {activation_type}")
-
-        return activation_class()  # Instantiate the activation class
 
 
 class Sigmoid(ParameterOperation):
@@ -314,3 +284,31 @@ class SELU(ParameterOperation):
         scale = 1.0507009873554804934193349852946
         grad = np.where(a.data >= 0, scale, alpha * scale * np.exp(a.data))
         a.grad_fn = lambda output_grad: output_grad * grad
+
+
+class Activation(Enum):
+    tanh = Tanh
+    relu = ReLU
+    sigmoid = Sigmoid
+    leaky_relu = LeakyReLU
+    swish = Swish
+    gelu = GELU
+    mish = Mish
+
+
+class ActivationFunction:
+    @staticmethod
+    def get(activation_type: str | Activation) -> ParameterOperation:
+        if isinstance(activation_type, str):
+            try:
+                activation_enum = Activation[activation_type]
+            except KeyError:
+                ValueError(f"Unsupported activation type: {activation_type}")
+        elif isinstance(activation_type, Activation):
+            activation_enum = activation_type
+        else:
+            ValueError(
+                "Expected either activation as a string or Activation enum"
+            )
+
+        return activation_enum.value()  # Instantiate the activation class

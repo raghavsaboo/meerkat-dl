@@ -5,9 +5,9 @@ from typing import Union
 import numpy as np
 from mdl.autodiff.dcgraph import DCGraph
 from mdl.autodiff.operations import ParameterOperation
-from mdl.net.layer import Layer
-from mdl.net.layer import Module
-from mdl.net.layer import Sequence
+from mdl.net.components import Layer
+from mdl.net.components import Module
+from mdl.net.components import Sequence
 from mdl.net.loss import Loss
 from mdl.tensor import Tensor
 
@@ -74,7 +74,7 @@ def gradient_checker(
 
     perturbed_gradients = np.asarray(perturbed_gradients)  # type: ignore
     backprop_gradients = np.asarray(backprop_gradients)  # type: ignore
-    
+
     print(f"perturbed_gradients: {perturbed_gradients}")
     print(f"backprop_gradients: {backprop_gradients}")
 
