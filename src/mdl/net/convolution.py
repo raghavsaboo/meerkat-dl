@@ -156,10 +156,10 @@ class Conv2D(Convolution):
         def inputs_grad_fn(output_grad):
             input_tensor_grad = np.zeros(padded_inputs.shape)
 
-            for (segment, row_slice, col_slice), idx in self.segment_iterator(
+            for (segment, row_slice, col_slice), (i, j) in self.segment_iterator(
                 padded_inputs, kernel.shape, np.ndindex(output_grad.shape[-2:])
             ):
-                sliced_output_grad = output_grad[:, idx[0], idx[1]]
+                sliced_output_grad = output_grad[:, i, j]
                 sum_grad = np.ones(segment.shape) * sliced_output_grad.reshape(
                     sliced_output_grad.size, 1, 1
                 )
@@ -172,10 +172,10 @@ class Conv2D(Convolution):
         def kernel_grad_fn(output_grad):
             kernel_grads = np.zeros(kernel.shape)
 
-            for (segment, row_slice, col_slice), idx in self.segment_iterator(
+            for (segment, row_slice, col_slice), (i, j) in self.segment_iterator(
                 padded_inputs, kernel.shape, np.ndindex(output_grad.shape[-2:])
             ):
-                sliced_output_grad = output_grad[:, idx[0], idx[1]]
+                sliced_output_grad = output_grad[:, i, j]
                 sum_grad = np.ones(segment.shape) * sliced_output_grad.reshape(
                     sliced_output_grad.size, 1, 1
                 )
@@ -245,11 +245,11 @@ class Conv3D(Convolution):
         def input_grad_fn(output_grad):
             input_tensor_grad = np.zeros(padded_inputs.shape)
 
-            for (segment, row_slice, col_slice), idx in self.segment_iterator(
+            for (segment, row_slice, col_slice), (i, j) in self.segment_iterator(
                 padded_inputs, kernel.shape, np.ndindex(output_grad.shape[-2:])
             ):
                 expanded_segment = np.expand_dims(segment, axis=1)
-                sliced_output_grad = output_grad[:, :, idx[0], idx[1]]
+                sliced_output_grad = output_grad[:, :, i, j]
                 sliced_output_grad = sliced_output_grad.reshape(
                     *sliced_output_grad.shape, 1, 1, 1
                 )
@@ -263,11 +263,11 @@ class Conv3D(Convolution):
         def kernel_grad_fn(output_grad):
             kernel_grads = np.zeros(kernel.shape)
 
-            for (segment, row_slice, col_slice), idx in self.segment_iterator(
+            for (segment, row_slice, col_slice), (i, j) in self.segment_iterator(
                 padded_inputs, kernel.shape, np.ndindex(output_grad[-2:])
             ):
                 expanded_segment = np.expand_dims(segment, 1)
-                sliced_output_grad = output_grad[:, :, idx[0], idx[1]]
+                sliced_output_grad = output_grad[:, :, i, j]
                 sliced_output_grad = sliced_output_grad.reshape(
                     *sliced_output_grad.shape, 1, 1, 1
                 )
